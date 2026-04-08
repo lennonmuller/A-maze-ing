@@ -27,3 +27,6 @@ class MazeGenerator:
 
     def get_maze(self) -> list[list[int]]:
         return self.maze
+
+
+# Fase 1 escolha de algoritimo (DFS)
