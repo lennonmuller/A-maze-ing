@@ -20,8 +20,8 @@ def parse_config(file_path: str) -> MazeData:
                     continue
 
                 if '=' not in line:
-                    raise KeyError(f"Error on line {line_num}: Invalid format. "
-                          "Use KEY=VALUE")
+                    raise KeyError(f"Error on line {line_num}: Invalid format."
+                          " Use KEY=VALUE")
 
                 key, value = line.split('=', 1)
                 config[key.strip()] = value.strip()
@@ -76,7 +76,16 @@ def parse_config(file_path: str) -> MazeData:
         raise RuntimeError(f"Unexpected Error: {e}")
 
 
+def main() -> None:
+    if len(sys.argv) != 2:
+        raise ValueError("Correct usage: python3 a_maze_ing.py config.txt")
+
+    maze_params = parse_config(sys.argv[1])
+
+    print("Configuration loaded successfully!")
+    print(f"Size: {maze_params.width}x{maze_params.height}")
+    print(f"Entry: {maze_params.entry} | Exit: {maze_params.exit}")
 
 
 if __name__ == "__main__":
-    parse_config()
+    main()
