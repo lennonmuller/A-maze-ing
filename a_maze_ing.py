@@ -1,14 +1,13 @@
 import sys
 import os
-from typing import Dict, Any
+from typing import Dict
 from mazegen.models import MazeData
 
 
 def parse_config(file_path: str) -> MazeData:
     """Read and valid the configuration archive"""
     if not os.path.exists(file_path):
-        print(f"Error: '{file_path}' not found.")
-        sys.exit(1)
+        raise FileNotFoundError(f"Error: '{file_path}' not found.")
 
     config: Dict[str, str] = {}  # cria um dicionario vazio
 
@@ -21,9 +20,8 @@ def parse_config(file_path: str) -> MazeData:
                     continue
 
                 if '=' not in line:
-                    print(f"Error on line {line_num}: Invalid format. "
+                    raise KeyError(f"Error on line {line_num}: Invalid format. "
                           "Use KEY=VALUE")
-                    sys.exit(1)
 
                 key, value = line.split('=', 1)
                 config[key.strip()] = value.strip()
@@ -34,14 +32,12 @@ def parse_config(file_path: str) -> MazeData:
                     "PERFECT"]
         for key in required:
             if key not in config:
-                print(f"Error: The mandatory key '{key}' is missing in config."
-                      )
-                sys.exit(1)
+                raise KeyError(f"Error: The mandatory key '{key}' is missing "
+                               "in config.")
 
         # converte os tipos para int
         width = int(config["WIDTH"])
         height = int(config["HEIGHT"])
-
 
         # converte "0,0" para tupla (0,0)
         entry_raw = config["ENTRY"].split(',')
@@ -52,13 +48,34 @@ def parse_config(file_path: str) -> MazeData:
         perfect = config["PERFECT"].lower() == "true"
         output_file = config["OUTPUT_FILE"]
 
-        #seed (opicional)
+        # seed (opicional)
         seed = int(config.get("SEED", 42))
 
-        # PAREI EM VALIDACAO DE LIMITES
+        # VALIDACAO DE LIMITES regra IV.4
+        if width <= 0 or height <= 0:
+            raise ValueError("Width and Height cannot be negative or zero")
+
+        if not (0 <= entry[0] < width and 0 <= entry[1] < height):
+            raise ValueError("Error: Entry outside of limits")
+
+        if not (0 <= exit[0] < width and 0 <= exit[1] < height):
+            raise ValueError("Error: Exit outside of maze limits")
+
+        if entry == exit:
+            raise ValueError("Error: Entry and exit cannot be the same.")
+
+        return MazeData(
+            width=width, height=height, entry=entry,
+            exit=exit, output_file=output_file, perfect=perfect,
+            seed=seed
+        )
+
     except ValueError as e:
-        print(f"Error on value of config {e}")
-        sys.exit(1)
+        raise ValueError(f"Error on value of config {e}")
+    except Exception as e:
+        raise RuntimeError(f"Unexpected Error: {e}")
+
+
 
 
 if __name__ == "__main__":
