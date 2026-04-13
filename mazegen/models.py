@@ -1,5 +1,3 @@
-''' Classes de dados (Cell, Point, etc.) '''
-
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
@@ -25,7 +23,11 @@ class Cell:
     """
     x: int
     y: int
-    walls: int = 15  # comeca todas as pareres (1111 em binario)
+    walls = {"N": True,
+             "E": True,
+             "S": True,
+             "W": True}
+    visited = False
 
 
 @dataclass
@@ -59,6 +61,6 @@ class MazeData:
     exit: Tuple[int, int]
     output_file: str
     perfect: bool
+    solution_path: List[Tuple[int, int]] = field(default_factory=list)
     seed: int = 42
     grid: List[List[Cell]] = field(default_factory=list)
-    solution_path: List[Tuple[int, int]]  # caminho curto
