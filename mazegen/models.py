@@ -5,55 +5,43 @@ from typing import List, Tuple
 @dataclass
 class Cell:
     """
-    Representa uma célula individual do labirinto.
+    Represents a single cell in the maze grid.
 
-    Atributos:
-        x (int): Coordenada horizontal da célula na grade (coluna).
-        y (int): Coordenada vertical da célula na grade (linha).
-        walls (int): Máscara de bits representando as paredes da célula.
+    Attributes:
+        x (int): horizontal position (column)
+        y (int): vertical position (row)
+        walls (int): bitmask representing cell walls
 
-    Convenção típica para `walls` (exemplo):
-        - bit 0 (1): parede ao norte
-        - bit 1 (2): parede ao sul
-        - bit 2 (4): parede a leste
-        - bit 3 (8): parede a oeste
+    Bitmask convention:
+        - 1: North
+        - 2: East
+        - 4: South
+        - 8: West
 
-    Valor padrão:
-        15 (binário 1111) → todas as paredes presentes.
+    Default value:
+        15 (1111 in binary) → all walls closed
     """
     x: int
     y: int
-    walls = {"N": True,
-             "E": True,
-             "S": True,
-             "W": True}
-    visited = False
+    walls: int = 15
+    visited: bool = False
 
 
 @dataclass
 class MazeData:
     """
-    Estrutura principal de dados para representar um labirinto completo.
+    Main data structure representing the maze.
 
-    Atributos:
-        width (int): Largura do labirinto em número de células.
-        height (int): Altura do labirinto em número de células.
-        entry (Tuple[int, int]): Coordenadas (x, y) da célula de entrada.
-        exit (Tuple[int, int]): Coordenadas (x, y) da célula de saída.
-        output_file (str): Caminho/nome do arquivo de saída para o labirinto.
-        perfect (bool): Indica se o labirinto deve ser perfeito (sem ciclos).
-        seed (int): Seed usada para geração pseudoaleatória do labirinto.
-        grid (List[List[Cell]]): Grade bidimensional de células que compõem
-        o labirinto.
-        solution_path (List[Tuple[int, int]]): Lista de coordenadas (x, y) que
-        formam o caminho da solução.
-
-    Uso típico:
-        - O gerador de labirinto inicializa `grid` com células e ajusta `walls`
-        - O resolvedor de caminho preenche `solution_path` com a rota da
-        entrada até a saída.
-        - O módulo de saída usa `output_file` para salvar o labirinto e/ou a
-        solução.
+    Attributes:
+        width (int): number of columns
+        height (int): number of rows
+        entry (Tuple[int, int]): entry position (x, y)
+        exit (Tuple[int, int]): exit position (x, y)
+        output_file (str): output file name/path
+        perfect (bool): indicates if maze has no cycles
+        seed (int): random seed for generation
+        grid (List[List[Cell]]): 2D grid of cells
+        solution_path (List[Tuple[int, int]]): path from entry to exit
     """
     width: int
     height: int
