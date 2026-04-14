@@ -1,137 +1,143 @@
-''' Maze generation logic using DFS (Depth-First Search) '''
+"""
+Maze generation logic.
 
-from mazegen.models import Cell
+This file implements DFS (Depth-First Search)
+to create a perfect maze.
+
+It uses Cell and Wall from models.
+"""
+
+from mazegen.models import Cell, Wall, MazeData
 import random
 
 
 class MazeGenerator:
     """
-    Class responsible for generating a maze using DFS with backtracking.
+    Generates a maze using DFS with backtracking.
 
-    The maze is represented as a grid of Cell objects.
+    The maze is a grid of Cell objects.
     Each cell starts with all walls closed (value = 15).
 
-    The algorithm removes walls between cells to create paths,
-    ensuring all cells are connected with no cycles(perfect maze).
+    The algorithm walks through the grid, removes walls,
+    and connects all cells.
+
+    Result: a perfect maze (no loops, all cells reachable).
     """
 
-    def __init__(self, width: int, height: int) -> None:
+    DIRECTIONS = {
+        (0, -1): Wall.NORTH,
+        (1, 0): Wall.EAST,
+        (0, 1): Wall.SOUTH,
+        (-1, 0): Wall.WEST,
+    }
+
+    OPPOSITE = {
+        Wall.NORTH: Wall.SOUTH,
+        Wall.SOUTH: Wall.NORTH,
+        Wall.EAST: Wall.WEST,
+        Wall.WEST: Wall.EAST,
+    }
+
+    def __init__(self, data: MazeData) -> None:
         """
-        Initialize the generator with maze dimensions.
+        Create a maze generator.
 
         Args:
-            width (int): number of columns
-            height (int): number of rows
+            width: number of columns
+            height: number of rows
+
+        The maze is generated automatically on creation.
         """
-        self._validate_input(width, height)
-        self.width = width
-        self.height = height
-        self.maze = self._generate_maze()
+
+        self.data = data
+
+        self._validate_input(data.width, data.height)
+
+        self.width = data.width
+        self.height = data.height
+
+        self.seed = data.seed
+        random.seed(self.seed)
 
     def _validate_input(self, width: int, height: int) -> None:
         """
-        Validate input values for maze size.
+        Check if width and height are valid.
 
         Raises:
-            TypeError: if width or height are not integers
-            ValueError: if values are out of allowed range
+            TypeError: if values are not integers
+            ValueError: if values are too small, too big, or invalid
         """
         if not isinstance(width, int) or not isinstance(height, int):
             raise TypeError("Width and Height must be integers")
 
         if width <= 0 or height <= 0:
-            raise ValueError("Width and Height cannot be negative or zero")
+            raise ValueError("Width and Height must be > 0")
 
         if width <= 5 or height <= 5:
-            raise ValueError("Maze too small, choose bigger values")
+            raise ValueError("Maze too small")
 
         if width > 500 or height > 500:
-            raise ValueError("Maze too big, choose smaller values")
+            raise ValueError("Maze too big")
 
     def _create_grid(self) -> list[list[Cell]]:
+
         """
-        Create a grid of cells with all walls closed.
+        Create the maze grid.
+
+        Each cell starts with all walls closed.
 
         Returns:
-            list[list[Cell]]: 2D list of Cell objects
+            2D list of Cell objects
         """
+
         return [
             [Cell(x, y) for x in range(self.width)]
             for y in range(self.height)
         ]
 
-    def _remove_wall(self, current: Cell, next: Cell) -> None:
-        """
-        Remove walls between two adjacent cells.
+    def _get_neighbors(
+        self,
+        cell: Cell,
+        grid: list[list[Cell]]
+    ) -> list[tuple[Cell, Wall]]:
 
-        This function updates both cells to keep consistency.
+        """
+        Get unvisited neighbors of a cell.
 
         Args:
-            current (Cell): current cell
-            next (Cell): neighbor cell
-        """
-        dx = next.x - current.x
-        dy = next.y - current.y
-
-        if dx == 1:  # next is to the East
-            current.walls &= ~2
-            next.walls &= ~8
-
-        elif dx == -1:  # next is to the West
-            current.walls &= ~8
-            next.walls &= ~2
-
-        elif dy == 1:  # next is to the South
-            current.walls &= ~4
-            next.walls &= ~1
-
-        elif dy == -1:  # next is to the North
-            current.walls &= ~1
-            next.walls &= ~4
-
-    def _get_neighbors(self, cell: Cell, grid: list[list[Cell]]) -> list[Cell]:
-        """
-        Get all unvisited neighbors of a cell.
-
-        Args:
-            cell (Cell): current cell
-            grid (list[list[Cell]]): maze grid
+            cell: current cell
+            grid: maze grid
 
         Returns:
-            list[Cell]: list of unvisited neighbor cells
+            List of (neighbor, direction)
         """
-        directions = [
-            (0, -1),  # North
-            (1, 0),   # East
-            (0, 1),   # South
-            (-1, 0)   # West
-        ]
 
         neighbors = []
 
-        for dx, dy in directions:
+        for (dx, dy), direction in self.DIRECTIONS.items():
             nx = cell.x + dx
             ny = cell.y + dy
 
             if 0 <= nx < self.width and 0 <= ny < self.height:
                 neighbor = grid[ny][nx]
                 if not neighbor.visited:
-                    neighbors.append(neighbor)
+                    neighbors.append((neighbor, direction))
 
         return neighbors
 
     def _generate_maze(self) -> list[list[Cell]]:
         """
-        Generate the maze using DFS (Depth-First Search).
+        Generate the maze using DFS.
 
-        Algorithm:
-            - Start from (0,0)
-            - Visit random neighbors
-            - Remove walls between cells
-            - Backtrack when no neighbors available
+        Steps:
+            - Start at (0,0)
+            - Visit random neighbor
+            - Remove wall
+            - Continue until no options
+            - Backtrack
 
         Returns:
-            list[list[Cell]]: generated maze grid
+            Generated maze grid
         """
         grid = self._create_grid()
 
@@ -147,9 +153,10 @@ class MazeGenerator:
             neighbors = self._get_neighbors(current, grid)
 
             if neighbors:
-                next_cell = random.choice(neighbors)
+                next_cell, direction = random.choice(neighbors)
 
-                self._remove_wall(current, next_cell)
+                current.open_wall(direction)
+                next_cell.open_wall(self.OPPOSITE[direction])
 
                 next_cell.visited = True
                 stack.append(next_cell)
@@ -160,9 +167,9 @@ class MazeGenerator:
 
     def get_maze(self) -> list[list[Cell]]:
         """
-        Get the generated maze.
+        Return the generated maze.
 
         Returns:
-            list[list[Cell]]: maze grid
+            Maze grid
         """
-        return self.maze
+        return self._generate_maze()

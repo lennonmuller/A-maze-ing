@@ -1,8 +1,18 @@
+"""
+Run maze generator.
+
+Steps:
+- read config file
+- generate maze
+- print result in ASCII
+"""
+
 import sys
 import os
 from typing import Dict
 from mazegen.models import MazeData
 from mazegen.generator import MazeGenerator
+from display.ascii_render import render_maze
 
 
 def parse_config(file_path: str) -> MazeData:
@@ -100,25 +110,29 @@ def main() -> None:
     Reads config file, generates maze, and prints result.
     """
     if len(sys.argv) != 2:
-        raise ValueError("Usage: python3 a_maze_ing.py config.txt")
+        print("Usage: python3 a_maze_ing.py config.txt")
+        sys.exit(1)
 
     maze_params = parse_config(sys.argv[1])
 
-    generator = MazeGenerator(
-        maze_params.width,
-        maze_params.height,
-    )
+    generator = MazeGenerator(maze_params)
 
     maze = generator.get_maze()
-    maze_params.grid = maze
 
     print("Configuration loaded successfully")
     print(f"Size: {maze_params.width}x{maze_params.height}")
     print(f"Entry: {maze_params.entry} | Exit: {maze_params.exit}")
-    print("Maze generated!")
+    print("\nMaze generated!\n")
 
-    for row in maze:
-        print([cell.walls for cell in row])
+    # debug raw values (optional)
+    # for row in maze:
+    #     print([cell.walls for cell in row])
+
+    print(render_maze(
+            maze,
+            entry=maze_params.entry,
+            exit=maze_params.exit,
+    ))
 
 
 if __name__ == "__main__":
