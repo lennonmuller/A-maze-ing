@@ -38,6 +38,18 @@ class MazeGenerator:
         Wall.WEST: Wall.EAST,
     }
 
+    PATTERN_42 = [
+        [1, 0, 1, 0, 1, 1, 1],
+        [1, 0, 1, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 1, 1],
+    ]
+
+    P_WIDTH = 7
+    P_HEIGHT = 5
+    # GRID 5X7
+
     def __init__(self, data: MazeData) -> None:
         """
         Create a maze generator.
@@ -73,12 +85,6 @@ class MazeGenerator:
         if width <= 0 or height <= 0:
             raise ValueError("Width and Height must be > 0")
 
-        if width <= 5 or height <= 5:
-            raise ValueError("Maze too small")
-
-        if width > 500 or height > 500:
-            raise ValueError("Maze too big")
-
     def _create_grid(self) -> list[list[Cell]]:
 
         """
@@ -95,10 +101,38 @@ class MazeGenerator:
             for y in range(self.height)
         ]
 
+    def _insert_42_pattern(self) -> bool:
+        """
+        Try to centralize 42 pattern,
+        returns True if centrilize or False if
+        grid is too small"""
+        if (
+            self.data.width < self.P_WIDTH + 4 or
+            self.data.height < self.P_HEIGHT + 4
+        ):
+            print("The maze size is too small to display the '42' pattern.")
+            return False
+
+        start_x = (self.data.width - self.P_WIDTH) // 2
+        start_y = (self.data.height - self.P_HEIGHT) // 2
+
+        for py in range(self.P_HEIGHT):
+            for px in range(self.P_WIDTH):
+                if self.PATTERN_42[py][px] == 1:
+                    target_x = start_x + px
+                    target_y = start_y + py
+
+                    cell = self.data.grid[target_y][target_x]
+
+                    cell.walls = 15
+
+                    cell.visited = True
+
+        return True
+
     def _get_neighbors(
         self,
-        cell: Cell,
-        grid: list[list[Cell]]
+        cell: Cell
     ) -> list[tuple[Cell, Wall]]:
 
         """
@@ -118,14 +152,48 @@ class MazeGenerator:
             nx = cell.x + dx
             ny = cell.y + dy
 
-            if 0 <= nx < self.width and 0 <= ny < self.height:
-                neighbor = grid[ny][nx]
+            if 0 <= nx < self.data.width and 0 <= ny < self.data.height:
+                neighbor = self.data.grid[ny][nx]
                 if not neighbor.visited:
                     neighbors.append((neighbor, direction))
 
         return neighbors
 
-    def _generate_maze(self) -> list[list[Cell]]:
+    def _remove_walls(self, cell_a: Cell, cell_b: Cell, direction: Wall):
+        """
+        Remove a wall between cell_a and cell_b,
+        keeping the logic of opposite walls
+        """
+        cell_a.open_wall(direction)
+        opposite_dir = self.OPPOSITE[direction]
+        cell_b.open_wall(opposite_dir)
+
+    def _imperfect_maze(self, chance: float = 0.05):
+        """
+        Remove random walls
+        if PErfect = False
+        """
+        for y in range(1, self.data.height - 1):
+            for x in range(1, self.data.width - 1):
+                cell = self.data.grid[y][x]
+
+                if cell.walls == 15:
+                    continue
+
+                if random.random() < chance:
+                    direction = random.choice(list(self.DIRECTIONS.values()))
+
+                    dx, dy = 0, 0
+                    for d_coord, d_bit in self.DIRECTIONS.items():
+                        if d_bit == direction:
+                            dx, dy = d_coord
+
+                    nx, ny = x + dx, y + dy
+                    neighbor = self.data.grid[ny][nx]
+                    if cell.is_closed(direction):
+                        self._remove_walls(cell, neighbor, direction)
+
+    def _generate_maze(self) -> MazeData:
         """
         Generate the maze using DFS.
 
@@ -139,18 +207,19 @@ class MazeGenerator:
         Returns:
             Generated maze grid
         """
-        grid = self._create_grid()
+        self.data.grid = self._create_grid()
+        self._insert_42_pattern()
 
-        stack = []
-        start = grid[0][0]
+        start_x, start_y = self.data.entry
+        start_cell = self.data.grid[start_y][start_x]
 
-        start.visited = True
-        stack.append(start)
+        stack = [start_cell]
+        start_cell.visited = True
 
         while stack:
             current = stack[-1]
 
-            neighbors = self._get_neighbors(current, grid)
+            neighbors = self._get_neighbors(current)
 
             if neighbors:
                 next_cell, direction = random.choice(neighbors)
@@ -163,7 +232,10 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-        return grid
+        if not self.data.perfect:
+            self._imperfect_maze()
+
+        return self.data
 
     def get_maze(self) -> list[list[Cell]]:
         """

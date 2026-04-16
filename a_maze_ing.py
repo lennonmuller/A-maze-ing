@@ -119,9 +119,12 @@ def main() -> None:
 
     maze = generator.get_maze()
 
-    print("Configuration loaded successfully")
-    print(f"Size: {maze_params.width}x{maze_params.height}")
-    print(f"Entry: {maze_params.entry} | Exit: {maze_params.exit}")
+    print("\nPreview do Labirinto (Hexadecimal):")
+    for row in maze_params.grid:
+        print("".join(cell.hex_value for cell in row))
+    print("\nLegenda: 'F' são células totalmente fechadas "
+          "(provavelmente o '42').")
+
     print("\nMaze generated!\n")
 
     # debug raw values (optional)
@@ -129,7 +132,7 @@ def main() -> None:
     #     print([cell.walls for cell in row])
 
     print(render_maze(
-            maze,
+            maze.grid,
             entry=maze_params.entry,
             exit=maze_params.exit,
     ))

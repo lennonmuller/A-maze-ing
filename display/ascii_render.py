@@ -2,15 +2,12 @@ from mazegen.models import Cell, Wall
 
 
 def render_maze(
-        grid: list[list[Cell]],
-        entry=None,
-        exit=None,
+    grid: list[list[Cell]],
+    entry=None,
+    exit=None,
 ) -> str:
-
     """
-    Render maze as ASCII.
-
-    Returns a string with the maze drawing.
+    Render maze in classic ASCII style (+, -, |)
     """
 
     height = len(grid)
@@ -28,21 +25,25 @@ def render_maze(
         for x in range(width):
             cell = grid[y][x]
 
-            # space inside cell
+            # conteúdo da célula (CENTRO)
             if (x, y) == entry:
-                line_top += " E "
+                content = " S "
             elif (x, y) == exit:
-                line_top += " X "
+                content = " E "
+            elif cell.walls == 15:
+                content = " 4 "
             else:
-                line_top += "   "
+                content = "   "
 
-            # east wall
+            line_top += content
+
+            # parede leste
             if cell.is_closed(Wall.EAST):
                 line_top += "|"
             else:
                 line_top += " "
 
-            # south wall
+            # parede sul
             if cell.is_closed(Wall.SOUTH):
                 line_bottom += "---+"
             else:
