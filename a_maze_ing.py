@@ -1,141 +1,26 @@
-"""
-Run maze generator.
+"""Application entry point for the maze project.
 
-Steps:
-- read config file
-- generate maze
-- print result in ASCII
+This module only starts the program. It reads one config file path from
+the command line, loads maze settings, and starts the interactive menu.
 """
 
 import sys
-import os
-from typing import Dict
-from mazegen.models import MazeData
-from mazegen.generator import MazeGenerator
-from display.ascii_render import render_maze
-
-
-def parse_config(file_path: str) -> MazeData:
-    """
-    Reads config file and builds maze settings.
-
-    This function opens a text file, reads key=value lines,
-    validates required fields and converts them into usable types.
-
-    If something is wrong, it raises errors instead of guessing.
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Error: '{file_path}' not found.")
-
-    config: Dict[str, str] = {}
-
-    try:
-        with open(file_path, 'r') as f:
-            for line_num, line in enumerate(f, 1):
-                line = line.strip()
-
-                # skip empty lines and comments
-                if not line or line.startswith('#'):
-                    continue
-
-                if '=' not in line:
-                    raise KeyError(
-                        f"Error on line {line_num}: bad format. Use KEY=VALUE"
-                    )
-
-                key, value = line.split('=', 1)
-                config[key.strip()] = value.strip()
-
-        # required keys (no excuses)
-        required = [
-            "WIDTH",
-            "HEIGHT",
-            "ENTRY",
-            "EXIT",
-            "OUTPUT_FILE",
-            "PERFECT"
-        ]
-        for key in required:
-            if key not in config:
-                raise KeyError(f"Missing required key: {key}")
-
-        # convert types
-        width = int(config["WIDTH"])
-        height = int(config["HEIGHT"])
-
-        entry_raw = config["ENTRY"].split(',')
-        exit_raw = config["EXIT"].split(',')
-
-        entry = (int(entry_raw[0]), int(entry_raw[1]))
-        exit_pos = (int(exit_raw[0]), int(exit_raw[1]))
-
-        perfect = config["PERFECT"].lower() == "true"
-        output_file = config["OUTPUT_FILE"]
-
-        seed = int(config.get("SEED", 42))
-
-        # validation rules (fuck off with chaos here)
-        if width <= 0 or height <= 0:
-            raise ValueError("Width and Height must be > 0")
-
-        if not (0 <= entry[0] < width and 0 <= entry[1] < height):
-            raise ValueError("Entry is outside maze bounds")
-
-        if not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
-            raise ValueError("Exit is outside maze bounds")
-
-        if entry == exit_pos:
-            raise ValueError("Entry and Exit cannot be the same")
-
-        return MazeData(
-            width=width,
-            height=height,
-            entry=entry,
-            exit=exit_pos,
-            output_file=output_file,
-            perfect=perfect,
-            seed=seed
-        )
-
-    except ValueError as e:
-        raise ValueError(f"Config value error: {e}")
-    except Exception as e:
-        raise RuntimeError(f"Unexpected error: {e}")
+from maze_config import parse_config_file
+from ui import run_menu
 
 
 def main() -> None:
-    """
-    Entry point of the program.
+    """Run the command line entry flow for the maze app.
 
-    Reads config file, generates maze, and prints result.
+    The function expects exactly one argument: the config file path.
+    It parses this file and passes the maze settings to the UI menu.
     """
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         sys.exit(1)
 
-    maze_params = parse_config(sys.argv[1])
-
-    generator = MazeGenerator(maze_params)
-
-    maze = generator.get_maze()
-
-    print("\nPreview do Labirinto (Hexadecimal):")
-    for row in maze_params.grid:
-        print("".join(cell.hex_value for cell in row))
-    print("\nLegenda: 'F' são células totalmente fechadas "
-          "(provavelmente o '42').")
-
-    print("\nMaze generated!\n")
-
-    # debug raw values (optional)
-    # for row in maze:
-    #     print([cell.walls for cell in row])
-
-    print(render_maze(
-            maze.grid,
-            entry=maze_params.entry,
-            exit=maze_params.exit,
-    ))
+    maze_params = parse_config_file(sys.argv[1])
+    run_menu(maze_params)
 
 
 if __name__ == "__main__":

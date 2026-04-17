@@ -1,7 +1,10 @@
+"""Small manual test for wall bit operations in Cell."""
+
 from mazegen.models import Cell, Wall
 
 
 def test_bits():
+    """Run a quick console check for opening walls and hex values."""
     c = Cell(0, 0)
     print(f"Inicio (todas fechadas): {c.walls} (hex: {c.hex_value})\n")
 

@@ -1,10 +1,8 @@
-"""
-Maze generation logic.
+"""Maze generation logic.
 
-This file implements DFS (Depth-First Search)
-to create a perfect maze.
-
-It uses Cell and Wall from models.
+This module builds a maze grid using depth-first search (DFS) with
+backtracking. It can also add a closed "42" pattern and create extra
+openings when `perfect` is disabled.
 """
 
 from mazegen.models import Cell, Wall, MazeData
@@ -12,16 +10,10 @@ import random
 
 
 class MazeGenerator:
-    """
-    Generates a maze using DFS with backtracking.
+    """Build a maze grid from the given maze settings.
 
-    The maze is a grid of Cell objects.
-    Each cell starts with all walls closed (value = 15).
-
-    The algorithm walks through the grid, removes walls,
-    and connects all cells.
-
-    Result: a perfect maze (no loops, all cells reachable).
+    The main algorithm is DFS with backtracking. Every cell starts with
+    all walls closed. During generation, walls are opened to connect cells.
     """
 
     DIRECTIONS = {
@@ -51,49 +43,26 @@ class MazeGenerator:
     # GRID 5X7
 
     def __init__(self, data: MazeData) -> None:
-        """
-        Create a maze generator.
+        """Store maze settings and initialize random seed.
 
         Args:
-            width: number of columns
-            height: number of rows
-
-        The maze is generated automatically on creation.
+            data: MazeData object with size, entry, exit, and flags.
         """
 
         self.data = data
 
-        self._validate_input(data.width, data.height)
-
         self.width = data.width
         self.height = data.height
+        self.pattern_cells: set[tuple[int, int]] = set()
 
         self.seed = data.seed
         random.seed(self.seed)
 
-    def _validate_input(self, width: int, height: int) -> None:
-        """
-        Check if width and height are valid.
-
-        Raises:
-            TypeError: if values are not integers
-            ValueError: if values are too small, too big, or invalid
-        """
-        if not isinstance(width, int) or not isinstance(height, int):
-            raise TypeError("Width and Height must be integers")
-
-        if width <= 0 or height <= 0:
-            raise ValueError("Width and Height must be > 0")
-
     def _create_grid(self) -> list[list[Cell]]:
-
-        """
-        Create the maze grid.
-
-        Each cell starts with all walls closed.
+        """Create a new grid where all cells start fully closed.
 
         Returns:
-            2D list of Cell objects
+            A matrix of Cell objects indexed as grid[y][x].
         """
 
         return [
@@ -102,10 +71,12 @@ class MazeGenerator:
         ]
 
     def _insert_42_pattern(self) -> bool:
+        """Insert the closed "42" pattern near the center of the grid.
+
+        Returns:
+            True if the pattern was inserted.
+            False if the maze is too small for the pattern.
         """
-        Try to centralize 42 pattern,
-        returns True if centrilize or False if
-        grid is too small"""
         if (
             self.data.width < self.P_WIDTH + 4 or
             self.data.height < self.P_HEIGHT + 4
@@ -113,8 +84,10 @@ class MazeGenerator:
             print("The maze size is too small to display the '42' pattern.")
             return False
 
-        start_x = (self.data.width - self.P_WIDTH) // 2
-        start_y = (self.data.height - self.P_HEIGHT) // 2
+        start_x = self._center_start(self.data.width, self.P_WIDTH)
+        start_y = self._center_start(self.data.height, self.P_HEIGHT)
+
+        self.pattern_cells.clear()
 
         for py in range(self.P_HEIGHT):
             for px in range(self.P_WIDTH):
@@ -123,6 +96,7 @@ class MazeGenerator:
                     target_y = start_y + py
 
                     cell = self.data.grid[target_y][target_x]
+                    self.pattern_cells.add((target_x, target_y))
 
                     cell.walls = 15
 
@@ -130,20 +104,24 @@ class MazeGenerator:
 
         return True
 
+    def _center_start(self, total_size: int, part_size: int) -> int:
+        """Return centered start index for a part inside a total length.
+
+        If free space is odd, one side will naturally have one extra cell.
+        """
+        return (total_size - part_size) // 2
+
     def _get_neighbors(
         self,
         cell: Cell
     ) -> list[tuple[Cell, Wall]]:
-
-        """
-        Get unvisited neighbors of a cell.
+        """Return all unvisited valid neighbors of one cell.
 
         Args:
-            cell: current cell
-            grid: maze grid
+            cell: Current position in the DFS walk.
 
         Returns:
-            List of (neighbor, direction)
+            A list of tuples (neighbor_cell, direction_to_neighbor).
         """
 
         neighbors = []
@@ -160,18 +138,23 @@ class MazeGenerator:
         return neighbors
 
     def _remove_walls(self, cell_a: Cell, cell_b: Cell, direction: Wall):
-        """
-        Remove a wall between cell_a and cell_b,
-        keeping the logic of opposite walls
+        """Open the wall between two adjacent cells.
+
+        This function opens the wall in `cell_a` and also opens the
+        opposite wall in `cell_b`.
         """
         cell_a.open_wall(direction)
         opposite_dir = self.OPPOSITE[direction]
         cell_b.open_wall(opposite_dir)
 
     def _imperfect_maze(self, chance: float = 0.05):
-        """
-        Remove random walls
-        if PErfect = False
+        """Open extra random walls to create loops.
+
+        This step runs only when the maze is not perfect. It skips border
+        cells and skips the locked cells that belong to the "42" pattern.
+
+        Args:
+            chance: Probability of trying one extra opening per cell.
         """
         for y in range(1, self.data.height - 1):
             for x in range(1, self.data.width - 1):
@@ -189,23 +172,36 @@ class MazeGenerator:
                             dx, dy = d_coord
 
                     nx, ny = x + dx, y + dy
+
+                    if (nx, ny) in self.pattern_cells:
+                        continue
+
                     neighbor = self.data.grid[ny][nx]
                     if cell.is_closed(direction):
                         self._remove_walls(cell, neighbor, direction)
 
-    def _generate_maze(self) -> MazeData:
-        """
-        Generate the maze using DFS.
+    def _seal_outer_walls(self) -> None:
+        """Force all external borders to stay closed."""
+        for x in range(self.width):
+            self.data.grid[0][x].walls |= Wall.NORTH
+            self.data.grid[self.height - 1][x].walls |= Wall.SOUTH
 
-        Steps:
-            - Start at (0,0)
-            - Visit random neighbor
-            - Remove wall
-            - Continue until no options
-            - Backtrack
+        for y in range(self.height):
+            self.data.grid[y][0].walls |= Wall.WEST
+            self.data.grid[y][self.width - 1].walls |= Wall.EAST
+
+    def _generate_maze(self) -> MazeData:
+        """Generate one maze and return the updated MazeData object.
+
+        Flow:
+            1. Build an empty closed grid.
+            2. Lock pattern cells for "42".
+            3. Run DFS from the entry point.
+            4. Optionally open extra walls in imperfect mode.
+            5. Seal all outer borders.
 
         Returns:
-            Generated maze grid
+            MazeData with `grid` filled.
         """
         self.data.grid = self._create_grid()
         self._insert_42_pattern()
@@ -235,13 +231,10 @@ class MazeGenerator:
         if not self.data.perfect:
             self._imperfect_maze()
 
+        self._seal_outer_walls()
+
         return self.data
 
     def get_maze(self) -> list[list[Cell]]:
-        """
-        Return the generated maze.
-
-        Returns:
-            Maze grid
-        """
+        """Public method to generate and return maze data."""
         return self._generate_maze()
