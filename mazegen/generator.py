@@ -235,6 +235,25 @@ class MazeGenerator:
 
         return self.data
 
+    def save_maze_to_file(data: MazeData, solution_str: str) -> None:
+        """
+        Write maze to Output_file
+        """
+        try:
+            with open(data.output_file, 'w') as f:
+                for row in data.grid:
+                    hex_row = "".join(cell.hex_value for cell in row)
+                    f.write(f"{hex_row}\n")
+
+                f.write("\n")
+
+                f.write(f"{data.entry[0]},{data.entry[1]}\n")
+                f.write(f"{data.exit[0]},{data.exit[1]}\n")
+                f.write(f"{solution_str}\n")
+
+        except Exception as e:
+            print(f"Error exporting maze {e}")
+
     def get_maze(self) -> list[list[Cell]]:
         """Public method to generate and return maze data."""
         return self._generate_maze()
