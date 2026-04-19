@@ -85,3 +85,31 @@ def solve_shortest_path(
     path.append(start)
     path.reverse()
     return path
+
+
+def coords_to_directions(path: list[Coord]) -> str:
+    """
+    Translate a lis of coordinates to directions
+    """
+    if not path or len(path):
+        return ""
+
+    directions = []
+
+    for i in range(len(path) - 1):
+        curr = path[i]
+        nxt = path[i + 1]
+
+        dx = nxt[0] - curr[0]
+        dy = nxt[1] - curr[1]
+
+        if dy == -1:
+            directions.append("N")
+        elif dx == 1:
+            directions.append("E")
+        elif dy == 1:
+            directions.append("S")
+        elif dx == -1:
+            directions.append("W")
+
+    return "".join(directions)
