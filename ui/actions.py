@@ -8,7 +8,7 @@ import random
 from display.ascii_render import render_maze
 from mazegen.generator import MazeGenerator
 from mazegen.models import MazeData
-from mazegen.solver import solve_shortest_path
+from mazegen.solver import solve_shortest_path, coords_to_directions
 from ui.state import UIState
 
 
@@ -74,7 +74,15 @@ def render_current_maze(state: UIState) -> None:
 def _generate_maze(maze_params: MazeData) -> MazeData:
     """Generate maze data from the current maze parameters."""
     generator = MazeGenerator(maze_params)
-    return generator.get_maze()
+    data = generator.get_maze()
+
+    path_coords = solve_shortest_path(data.grid, data.entry, data.exit)
+
+    path_str = coords_to_directions(path_coords)
+
+    MazeGenerator.save_maze_to_file(data, path_str)
+
+    return data
 
 
 def _maze_path_set(state: UIState) -> set[tuple[int, int]] | None:

@@ -91,7 +91,7 @@ def coords_to_directions(path: list[Coord]) -> str:
     """
     Translate a lis of coordinates to directions
     """
-    if not path or len(path):
+    if not path or len(path) < 2:
         return ""
 
     directions = []
