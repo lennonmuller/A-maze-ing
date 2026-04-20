@@ -3,12 +3,19 @@ run:
 
 install:
 	pip3 install -r requirements.txt
+	pip3 install -e .
 
 debug:
-	python3 -m pdb
+	python3 -m pdb a_maze_ing.py config.txt
 
 clean:
-	rm -rf __pycache__ .mypy_cache dist *.egg-info
+	@echo "Limpando caches e arquivos temporários..."
+	rm -rf __pycache__ 
+	rm -rf .mypy_cache
+	rm -rf .pytest_cache
+	rm -rf dist
+	rm -rf *.egg-info
+	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 lint:
 	flake8 .
@@ -17,3 +24,5 @@ lint:
 lint-strict:
 	flake8 .
 	mypy . --strict
+
+.PHONY: run install debug clean lint lint-strict
