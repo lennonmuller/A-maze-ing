@@ -1,20 +1,12 @@
-"""Maze generation logic.
+"""Generate maze grids from MazeData settings."""
 
-This module builds a maze grid using depth-first search (DFS) with
-backtracking. It can also add a closed "42" pattern and create extra
-openings when `perfect` is disabled.
-"""
-
-from mazegen.models import Cell, Wall, MazeData
+from collections.abc import Callable
+from maze_gen.models import Cell, Wall, MazeData
 import random
 
 
 class MazeGenerator:
-    """Build a maze grid from the given maze settings.
-
-    The main algorithm is DFS with backtracking. Every cell starts with
-    all walls closed. During generation, walls are opened to connect cells.
-    """
+    """Build a maze using DFS and optional extra openings."""
 
     DIRECTIONS = {
         (0, -1): Wall.NORTH,
@@ -30,6 +22,10 @@ class MazeGenerator:
         Wall.WEST: Wall.EAST,
     }
 
+    DELTA_BY_DIRECTION = {
+        value: key for key, value in DIRECTIONS.items()
+    }
+
     PATTERN_42 = [
         [1, 0, 1, 0, 1, 1, 1],
         [1, 0, 1, 0, 0, 0, 1],
@@ -40,14 +36,9 @@ class MazeGenerator:
 
     P_WIDTH = 7
     P_HEIGHT = 5
-    # GRID 5X7
 
     def __init__(self, data: MazeData) -> None:
-        """Store maze settings and initialize random seed.
-
-        Args:
-            data: MazeData object with size, entry, exit, and flags.
-        """
+        """Store settings and initialize random seed."""
 
         self.data = data
 
@@ -59,30 +50,21 @@ class MazeGenerator:
         random.seed(self.seed)
 
     def _create_grid(self) -> list[list[Cell]]:
-        """Create a new grid where all cells start fully closed.
-
-        Returns:
-            A matrix of Cell objects indexed as grid[y][x].
-        """
+        """Create a new grid with all walls closed."""
 
         return [
             [Cell(x, y) for x in range(self.width)]
             for y in range(self.height)
         ]
 
-    def _insert_42_pattern(self) -> bool:
-        """Insert the closed "42" pattern near the center of the grid.
-
-        Returns:
-            True if the pattern was inserted.
-            False if the maze is too small for the pattern.
-        """
+    def _insert_42_pattern(self) -> None:
+        """Insert and lock the 42 pattern cells."""
         if (
             self.data.width < self.P_WIDTH + 4 or
             self.data.height < self.P_HEIGHT + 4
         ):
             print("The maze size is too small to display the '42' pattern.")
-            return False
+            return
 
         start_x = self._center_start(self.data.width, self.P_WIDTH)
         start_y = self._center_start(self.data.height, self.P_HEIGHT)
@@ -102,27 +84,15 @@ class MazeGenerator:
 
                     cell.visited = True
 
-        return True
-
     def _center_start(self, total_size: int, part_size: int) -> int:
-        """Return centered start index for a part inside a total length.
-
-        If free space is odd, one side will naturally have one extra cell.
-        """
+        """Return centered start index for a segment."""
         return (total_size - part_size) // 2
 
     def _get_neighbors(
         self,
         cell: Cell
     ) -> list[tuple[Cell, Wall]]:
-        """Return all unvisited valid neighbors of one cell.
-
-        Args:
-            cell: Current position in the DFS walk.
-
-        Returns:
-            A list of tuples (neighbor_cell, direction_to_neighbor).
-        """
+        """Return unvisited neighbor cells with directions."""
 
         neighbors = []
 
@@ -138,24 +108,17 @@ class MazeGenerator:
         return neighbors
 
     def _remove_walls(self, cell_a: Cell, cell_b: Cell, direction: Wall):
-        """Open the wall between two adjacent cells.
-
-        This function opens the wall in `cell_a` and also opens the
-        opposite wall in `cell_b`.
-        """
+        """Open the shared wall between two cells."""
         cell_a.open_wall(direction)
         opposite_dir = self.OPPOSITE[direction]
         cell_b.open_wall(opposite_dir)
 
-    def _imperfect_maze(self, chance: float = 0.05):
-        """Open extra random walls to create loops.
-
-        This step runs only when the maze is not perfect. It skips border
-        cells and skips the locked cells that belong to the "42" pattern.
-
-        Args:
-            chance: Probability of trying one extra opening per cell.
-        """
+    def _imperfect_maze(
+        self,
+        chance: float = 0.05,
+        on_step: Callable[[MazeData], None] | None = None,
+    ) -> None:
+        """Open random extra walls to create loops."""
         for y in range(1, self.data.height - 1):
             for x in range(1, self.data.width - 1):
                 cell = self.data.grid[y][x]
@@ -166,10 +129,7 @@ class MazeGenerator:
                 if random.random() < chance:
                     direction = random.choice(list(self.DIRECTIONS.values()))
 
-                    dx, dy = 0, 0
-                    for d_coord, d_bit in self.DIRECTIONS.items():
-                        if d_bit == direction:
-                            dx, dy = d_coord
+                    dx, dy = self.DELTA_BY_DIRECTION[direction]
 
                     nx, ny = x + dx, y + dy
 
@@ -179,9 +139,11 @@ class MazeGenerator:
                     neighbor = self.data.grid[ny][nx]
                     if cell.is_closed(direction):
                         self._remove_walls(cell, neighbor, direction)
+                        if on_step is not None:
+                            on_step(self.data)
 
     def _seal_outer_walls(self) -> None:
-        """Force all external borders to stay closed."""
+        """Force all outer borders to stay closed."""
         for x in range(self.width):
             self.data.grid[0][x].walls |= Wall.NORTH
             self.data.grid[self.height - 1][x].walls |= Wall.SOUTH
@@ -190,21 +152,15 @@ class MazeGenerator:
             self.data.grid[y][0].walls |= Wall.WEST
             self.data.grid[y][self.width - 1].walls |= Wall.EAST
 
-    def _generate_maze(self) -> MazeData:
-        """Generate one maze and return the updated MazeData object.
-
-        Flow:
-            1. Build an empty closed grid.
-            2. Lock pattern cells for "42".
-            3. Run DFS from the entry point.
-            4. Optionally open extra walls in imperfect mode.
-            5. Seal all outer borders.
-
-        Returns:
-            MazeData with `grid` filled.
-        """
+    def _generate_maze(
+        self,
+        on_step: Callable[[MazeData], None] | None = None,
+    ) -> MazeData:
+        """Generate maze and return updated MazeData."""
         self.data.grid = self._create_grid()
         self._insert_42_pattern()
+        if on_step is not None:
+            on_step(self.data)
 
         start_x, start_y = self.data.entry
         start_cell = self.data.grid[start_y][start_x]
@@ -225,35 +181,36 @@ class MazeGenerator:
 
                 next_cell.visited = True
                 stack.append(next_cell)
+                if on_step is not None:
+                    on_step(self.data)
             else:
                 stack.pop()
 
         if not self.data.perfect:
-            self._imperfect_maze()
+            self._imperfect_maze(on_step=on_step)
 
         self._seal_outer_walls()
+        if on_step is not None:
+            on_step(self.data)
 
         return self.data
 
+    @staticmethod
     def save_maze_to_file(data: MazeData, solution_str: str) -> None:
-        """
-        Write maze to Output_file
-        """
-        try:
-            with open(data.output_file, 'w') as f:
-                for row in data.grid:
-                    hex_row = "".join(cell.hex_value for cell in row)
-                    f.write(f"{hex_row}\n")
+        """Write maze hex rows and solution data to file."""
+        with open(data.output_file, "w", encoding="utf-8") as file:
+            for row in data.grid:
+                hex_row = "".join(cell.hex_value for cell in row)
+                file.write(f"{hex_row}\n")
 
-                f.write("\n")
+            file.write("\n")
+            file.write(f"{data.entry[0]},{data.entry[1]}\n")
+            file.write(f"{data.exit[0]},{data.exit[1]}\n")
+            file.write(f"{solution_str}\n")
 
-                f.write(f"{data.entry[0]},{data.entry[1]}\n")
-                f.write(f"{data.exit[0]},{data.exit[1]}\n")
-                f.write(f"{solution_str}\n")
-
-        except Exception as e:
-            print(f"Error exporting maze {e}")
-
-    def get_maze(self) -> list[list[Cell]]:
-        """Public method to generate and return maze data."""
-        return self._generate_maze()
+    def get_maze(
+        self,
+        on_step: Callable[[MazeData], None] | None = None,
+    ) -> MazeData:
+        """Run generation and return the maze data object."""
+        return self._generate_maze(on_step=on_step)

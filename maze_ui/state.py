@@ -1,16 +1,17 @@
-"""State model for one interactive UI session."""
+"""State object used by the terminal UI."""
 
 from dataclasses import dataclass
 
-from mazegen.models import MazeData
+from maze_gen.models import MazeData
 
 
 @dataclass
 class UIState:
-    """Store all mutable values used while menu is running."""
+    """Keep mutable values while menu loop runs."""
 
     maze_params: MazeData
     maze_data: MazeData
     show_path: bool = False
     wall_color: str = "default"
     pattern_color: str = "default"
+    status_message: str = ""
