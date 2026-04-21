@@ -3,16 +3,16 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "maze_gen"
+name = "mazegen"
 version = "1.0.0"
-description = "Reusable maze generator module (A-Maze-ing)"
+description = "Reusable maze generator module (A-Maze-ing — 42)"
+readme = "README.md"
+requires-python = ">=3.10"
 authors = [
     {name = "lmuler-f"},
     {name = "eamaral-"}
 ]
-requires-python = ">=3.10"
-dependencies = []
+license = "MIT"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["maze_gen*", "maze_display*", "maze_ui*", "maze_config*"]
+[tool.setuptools]
+packages = ["maze_gen"]

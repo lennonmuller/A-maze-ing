@@ -25,4 +25,9 @@ lint-strict:
 	flake8 .
 	mypy . --strict
 
+build:
+	@echo "Gerando pacote redistribuível..."
+	pip3 install build
+	python3 -m build
+
 .PHONY: run install debug clean lint lint-strict
