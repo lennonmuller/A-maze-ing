@@ -6,7 +6,11 @@ from typing import TypeVar
 
 from maze_display.ascii_render import render_maze
 from maze_gen.models import MazeData
-from maze_ui.actions import compute_shortest_path, render_current_maze, toggle_path
+from maze_ui.actions import (
+    compute_shortest_path,
+    render_current_maze,
+    toggle_path,
+)
 from maze_ui.constants import (
     STATUS_DRAWING_PATH,
     STATUS_GENERATING_PREFIX,

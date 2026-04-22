@@ -9,7 +9,7 @@ from maze_config.validator import validate_maze_data, validate_required_keys
 def parse_config_file(file_path: str) -> MazeData:
     """Load config text, parse values, validate, and return MazeData."""
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Error: '{file_path}' not found.")
+        raise FileNotFoundError(f"'{file_path}' not found.")
 
     config: dict[str, str] = {}
 

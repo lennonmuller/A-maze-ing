@@ -14,8 +14,11 @@ def main() -> None:
     try:
         maze_params = parse_config_file(sys.argv[1])
         run_menu(maze_params)
-    except (ValueError, KeyError, FileNotFoundError) as e:
+    except (ValueError, KeyError, FileNotFoundError, OSError) as e:
         print(f"Error: {e}")
+        sys.exit(1)
+    except (KeyboardInterrupt, EOFError):
+        print("Error: execution interrupted by user input.")
         sys.exit(1)
 
 

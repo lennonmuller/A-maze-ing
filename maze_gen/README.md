@@ -17,10 +17,10 @@ pip install mazegen-1.0.0-py3-none-any.whl
 
 ### Basic Usage
 
-After installation, import directly from `mazegen`:
+After installation, import directly from `maze_gen`:
 
 ```python
-from mazegen import MazeGenerator, MazeData, solve_shortest_path, coords_to_directions
+from maze_gen import MazeGenerator, MazeData, solve_shortest_path, coords_to_directions
 
 # 1. Create maze configuration
 maze_config = MazeData(
@@ -90,7 +90,7 @@ Each `Cell` has:
 Use the `solve_shortest_path()` function to find the shortest path:
 
 ```python
-from mazegen import solve_shortest_path, coords_to_directions
+from maze_gen import solve_shortest_path, coords_to_directions
 
 # Get solution as coordinate list
 path = solve_shortest_path(maze_data.grid, maze_data.entry, maze_data.exit)

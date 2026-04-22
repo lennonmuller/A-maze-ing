@@ -98,6 +98,8 @@ def render_current_maze(
     print("╚══════════════════════════════════════════════╝")
     if state.status_message:
         print(state.status_message)
+    if state.maze_data.pattern_warning:
+        print(state.maze_data.pattern_warning)
     print()
 
     maze_text = render_maze(

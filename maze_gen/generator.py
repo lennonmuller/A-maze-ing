@@ -59,12 +59,21 @@ class MazeGenerator:
 
     def _insert_42_pattern(self) -> None:
         """Insert and lock the 42 pattern cells."""
+        min_width = self.P_WIDTH + 4
+        min_height = self.P_HEIGHT + 4
+
         if (
-            self.data.width < self.P_WIDTH + 4 or
-            self.data.height < self.P_HEIGHT + 4
+            self.data.width < min_width or
+            self.data.height < min_height
         ):
-            print("The maze size is too small to display the '42' pattern.")
+            self.data.pattern_warning = (
+                "Warning: maze too small for '42' pattern "
+                f"({self.data.width}x{self.data.height}). "
+                f"Minimum supported size: {min_width}x{min_height}."
+            )
             return
+
+        self.data.pattern_warning = ""
 
         start_x = self._center_start(self.data.width, self.P_WIDTH)
         start_y = self._center_start(self.data.height, self.P_HEIGHT)
@@ -107,7 +116,12 @@ class MazeGenerator:
 
         return neighbors
 
-    def _remove_walls(self, cell_a: Cell, cell_b: Cell, direction: Wall):
+    def _remove_walls(
+        self,
+        cell_a: Cell,
+        cell_b: Cell,
+        direction: Wall,
+    ) -> None:
         """Open the shared wall between two cells."""
         cell_a.open_wall(direction)
         opposite_dir = self.OPPOSITE[direction]

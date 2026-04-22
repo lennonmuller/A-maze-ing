@@ -68,8 +68,8 @@ def bg_colorize(text: str, color: str) -> str:
 
 def render_maze(
     grid: list[list[Cell]],
-    entry=None,
-    exit=None,
+    entry: tuple[int, int] | None = None,
+    exit: tuple[int, int] | None = None,
     path: list[tuple[int, int]] | None = None,
     wall_color: str = "default",
     pattern_color: str = "default",
@@ -182,8 +182,8 @@ def _render_cell_row(
     grid: list[list[Cell]],
     vertical: list[list[bool]],
     y: int,
-    entry,
-    exit,
+    entry: tuple[int, int] | None,
+    exit: tuple[int, int] | None,
     path_cells: set[tuple[int, int]],
     h_edges: set[tuple[int, int]],
     v_edges: set[tuple[int, int]],

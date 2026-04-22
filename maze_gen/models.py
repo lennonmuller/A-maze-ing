@@ -1,6 +1,6 @@
 """Data classes and wall flags used by the maze app."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 
 
@@ -44,3 +44,5 @@ class MazeData:
     output_file: str
     perfect: bool
     seed: int = 42
+    grid: list[list[Cell]] = field(default_factory=list)
+    pattern_warning: str = ""
