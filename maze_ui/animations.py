@@ -32,7 +32,16 @@ def run_with_generation_animation(
     wall_color: str,
     pattern_color: str,
 ) -> T:
-    """Run one generation operation with temporary screen animation."""
+    """Run one generation operation with temporary screen animation.
+
+    Args:
+        operation: Function that performs generation with a callback.
+        wall_color: Wall color for animation frame.
+        pattern_color: Pattern color for animation frame.
+
+    Returns:
+        T: Result returned by operation.
+    """
     _enter_animation_screen()
     try:
         callback = build_generation_callback(
@@ -48,7 +57,15 @@ def build_generation_callback(
     wall_color: str,
     pattern_color: str,
 ) -> Callable[[MazeData], None]:
-    """Build throttled callback to animate maze generation steps."""
+    """Build throttled callback for generation animation.
+
+    Args:
+        wall_color: Wall color for animation frame.
+        pattern_color: Pattern color for animation frame.
+
+    Returns:
+        Callable[[MazeData], None]: Callback used during generation.
+    """
     last_draw = 0.0
     step_count = 0
     min_frame_interval = 0.02
@@ -82,7 +99,11 @@ def build_generation_callback(
 
 
 def animate_path_reveal(state: UIState) -> None:
-    """Animate shortest path reveal."""
+    """Animate shortest path reveal on screen.
+
+    Args:
+        state: Mutable UI state.
+    """
     path_coords = compute_shortest_path(state)
     if not path_coords:
         state.status_message = STATUS_NO_PATH
@@ -104,10 +125,10 @@ def animate_path_reveal(state: UIState) -> None:
 
 
 def _enter_animation_screen() -> None:
-    """Enter temporary buffer used only for generation animation."""
+    """Enter temporary terminal buffer for animation."""
     print(ALT_SCREEN_ON + HIDE_CURSOR, end="", flush=True)
 
 
 def _leave_animation_screen() -> None:
-    """Return to normal terminal buffer after generation animation."""
+    """Return to normal terminal buffer after animation."""
     print(SHOW_CURSOR + ALT_SCREEN_OFF, end="", flush=True)

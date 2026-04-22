@@ -1,4 +1,4 @@
-"""Start the maze program from command line."""
+"""Start the maze program from the command line."""
 
 import sys
 from maze_config.parser import parse_config_file
@@ -6,7 +6,15 @@ from maze_ui.menu import run_menu
 
 
 def main() -> None:
-    """Read config path, load settings, and open the UI menu."""
+    """Run the main application flow.
+
+    Reads the config path from command-line arguments, parses the
+    configuration file, and starts the interactive menu.
+
+    Raises:
+        SystemExit: If arguments are invalid or an expected runtime error
+            happens during startup.
+    """
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         sys.exit(1)

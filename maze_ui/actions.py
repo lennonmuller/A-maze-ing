@@ -1,4 +1,4 @@
-"""Action functions called by the terminal menu."""
+"""Action functions used by the terminal menu."""
 
 from collections.abc import Callable
 import random
@@ -20,7 +20,14 @@ from maze_ui.state import UIState
 
 
 def initialize_state(maze_params: MazeData) -> UIState:
-    """Create UI state and generate the first maze."""
+    """Create UI state and generate first maze.
+
+    Args:
+        maze_params: Base maze configuration.
+
+    Returns:
+        UIState: Initialized UI state.
+    """
     state = UIState(
         maze_params=maze_params,
         maze_data=_generate_maze(maze_params),
@@ -33,7 +40,15 @@ def initialize_state_with_animation(
     maze_params: MazeData,
     on_step: Callable[[MazeData], None],
 ) -> UIState:
-    """Create UI state and animate maze generation steps."""
+    """Create UI state with animated generation.
+
+    Args:
+        maze_params: Base maze configuration.
+        on_step: Callback called for each generation step.
+
+    Returns:
+        UIState: Initialized UI state.
+    """
     state = UIState(
         maze_params=maze_params,
         maze_data=_generate_maze(maze_params, on_step=on_step),
@@ -46,14 +61,23 @@ def regenerate_maze(
     state: UIState,
     on_step: Callable[[MazeData], None] | None = None,
 ) -> None:
-    """Generate a new maze with a new random seed."""
+    """Generate a new maze using a fresh random seed.
+
+    Args:
+        state: Mutable UI state.
+        on_step: Optional callback called for generation steps.
+    """
     state.maze_params.seed = random.SystemRandom().randint(1, 10**9)
     state.maze_data = _generate_maze(state.maze_params, on_step=on_step)
     state.status_message = STATUS_NEW_MAZE
 
 
 def toggle_path(state: UIState) -> None:
-    """Toggle shortest-path visibility."""
+    """Toggle shortest-path visibility.
+
+    Args:
+        state: Mutable UI state.
+    """
     state.show_path = not state.show_path
     if state.show_path:
         state.status_message = STATUS_PATH_ON
@@ -62,7 +86,14 @@ def toggle_path(state: UIState) -> None:
 
 
 def compute_shortest_path(state: UIState) -> list[tuple[int, int]]:
-    """Compute shortest path for current maze."""
+    """Compute shortest path for current maze.
+
+    Args:
+        state: Mutable UI state.
+
+    Returns:
+        list[tuple[int, int]]: Path coordinates.
+    """
     return solve_shortest_path(
         state.maze_data.grid,
         state.maze_data.entry,
@@ -71,13 +102,23 @@ def compute_shortest_path(state: UIState) -> list[tuple[int, int]]:
 
 
 def update_wall_color(state: UIState, color: str) -> None:
-    """Set wall color in UI state."""
+    """Set wall color in UI state.
+
+    Args:
+        state: Mutable UI state.
+        color: New wall color name.
+    """
     state.wall_color = color
     state.status_message = f"Wall color: {color}."
 
 
 def update_pattern_color(state: UIState, color: str) -> None:
-    """Set 42 pattern color in UI state."""
+    """Set ``42`` pattern color in UI state.
+
+    Args:
+        state: Mutable UI state.
+        color: New pattern color name.
+    """
     state.pattern_color = color
     state.status_message = f"Pattern color: {color}."
 
@@ -86,7 +127,12 @@ def render_current_maze(
     state: UIState,
     path_override: list[tuple[int, int]] | None = None,
 ) -> None:
-    """Render current app frame with header, maze, and footer."""
+    """Render current app frame.
+
+    Args:
+        state: Mutable UI state.
+        path_override: Optional path used only for current render.
+    """
     path_coords = (
         path_override
         if path_override is not None
@@ -120,7 +166,15 @@ def _generate_maze(
     maze_params: MazeData,
     on_step: Callable[[MazeData], None] | None = None,
 ) -> MazeData:
-    """Generate maze, solve path, and write output file."""
+    """Generate maze, solve path, and write output file.
+
+    Args:
+        maze_params: Maze generation parameters.
+        on_step: Optional callback called during generation.
+
+    Returns:
+        MazeData: Generated maze data.
+    """
     generator = MazeGenerator(maze_params)
     data = generator.get_maze(on_step=on_step)
 
@@ -134,7 +188,14 @@ def _generate_maze(
 
 
 def _maze_path_set(state: UIState) -> list[tuple[int, int]] | None:
-    """Return path list only when path view is enabled."""
+    """Return path only when path view is enabled.
+
+    Args:
+        state: Mutable UI state.
+
+    Returns:
+        list[tuple[int, int]] | None: Path, empty path, or ``None``.
+    """
     if not state.show_path:
         return None
 
@@ -148,7 +209,15 @@ def _maze_path_set(state: UIState) -> list[tuple[int, int]] | None:
 
 
 def _render_menu_box(grid_width: int, text: str) -> str:
-    """Render a closed box for menu options."""
+    """Render a framed text box for menu options.
+
+    Args:
+        grid_width: Maze width used to scale box size.
+        text: Footer menu text.
+
+    Returns:
+        str: Box text with three lines.
+    """
     frame_width = grid_width * 4 + 1
     inner_width = max(16, frame_width - 2)
 

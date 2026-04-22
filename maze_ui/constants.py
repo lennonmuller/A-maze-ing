@@ -29,6 +29,7 @@ STATUS_DRAWING_PATH = "Drawing shortest path..."
 STATUS_INVALID_OPTION = "Invalid option. Choose 1 to 5."
 STATUS_INVALID_COLOR = "Invalid color. Keeping 'default'."
 STATUS_GENERATING_PREFIX = "Generating maze"
+STATUS_QUIT = "Exiting application. See you next time."
 
 LABEL_WALL_COLOR = "Choose wall color"
 LABEL_PATTERN_COLOR = "Choose 42 pattern color"

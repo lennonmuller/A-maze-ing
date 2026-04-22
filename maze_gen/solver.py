@@ -22,7 +22,16 @@ DIRECTION_BY_DELTA = {
 
 
 def _valid_neighbors(grid: list[list[Cell]], x: int, y: int) -> list[Coord]:
-    """Return open neighbors from one cell."""
+    """Return open neighbor coordinates for one cell.
+
+    Args:
+        grid: Maze grid.
+        x: Cell x coordinate.
+        y: Cell y coordinate.
+
+    Returns:
+        list[Coord]: Valid reachable neighbor coordinates.
+    """
     height = len(grid)
     width = len(grid[0])
     cell = grid[y][x]
@@ -45,7 +54,16 @@ def solve_shortest_path(
     start: Coord,
     goal: Coord
 ) -> list[Coord]:
-    """Return shortest path from start to goal using BFS."""
+    """Find shortest path between two points using BFS.
+
+    Args:
+        grid: Maze grid.
+        start: Start coordinate.
+        goal: Goal coordinate.
+
+    Returns:
+        list[Coord]: Ordered path from start to goal, or empty list.
+    """
     if start == goal:
         return [start]
 
@@ -84,7 +102,14 @@ def solve_shortest_path(
 
 
 def coords_to_directions(path: list[Coord]) -> str:
-    """Convert a coordinate path to N/E/S/W letters."""
+    """Convert a coordinate path to ``N/E/S/W`` text.
+
+    Args:
+        path: Ordered coordinate path.
+
+    Returns:
+        str: Direction string.
+    """
     if not path or len(path) < 2:
         return ""
 

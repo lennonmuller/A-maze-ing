@@ -1,4 +1,4 @@
-"""Simple terminal menu loop for maze actions."""
+"""Terminal menu loop for maze actions."""
 
 from maze_gen.models import MazeData
 from maze_ui.animations import (
@@ -13,6 +13,7 @@ from maze_ui.constants import (
     PROMPT_OPTION,
     STATUS_INVALID_COLOR,
     STATUS_INVALID_OPTION,
+    STATUS_QUIT,
 )
 from maze_ui.actions import (
     initialize_state_with_animation,
@@ -25,7 +26,11 @@ from maze_ui.actions import (
 
 
 def run_menu(maze_params: MazeData) -> None:
-    """Run menu loop until user quits."""
+    """Run menu loop until user chooses quit.
+
+    Args:
+        maze_params: Maze configuration for first generation.
+    """
     state = run_with_generation_animation(
         lambda callback: initialize_state_with_animation(
             maze_params,
@@ -62,18 +67,30 @@ def run_menu(maze_params: MazeData) -> None:
             pattern_color = _color_choice(LABEL_PATTERN_COLOR)
             update_pattern_color(state, pattern_color)
         elif choice == "5":
+            print(f"\n{STATUS_QUIT}")
             break
         else:
             state.status_message = STATUS_INVALID_OPTION
 
 
 def _menu_choice() -> str:
-    """Read one menu option from user."""
+    """Read one menu option from user input.
+
+    Returns:
+        str: Normalized option text.
+    """
     return input(PROMPT_OPTION).strip()
 
 
 def _color_choice(title: str) -> str:
-    """Read one color name or index."""
+    """Read one color by name or numeric index.
+
+    Args:
+        title: Prompt title shown before options.
+
+    Returns:
+        str: Selected color or ``default``.
+    """
     options_line = "  ".join(
         f"{idx}) {color}" for idx, color in enumerate(COLOR_OPTIONS, 1)
     )

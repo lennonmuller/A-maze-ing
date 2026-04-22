@@ -51,7 +51,15 @@ PATH_GLYPHS[(False, False, False, False)] = "•"
 
 
 def colorize(text: str, color: str) -> str:
-    """Apply ANSI text color when color is valid."""
+    """Apply ANSI text color when color is valid.
+
+    Args:
+        text: Text to color.
+        color: Color name.
+
+    Returns:
+        str: Colored text or original text.
+    """
     prefix = ANSI_COLORS.get(color, "")
     if not prefix:
         return text
@@ -59,7 +67,15 @@ def colorize(text: str, color: str) -> str:
 
 
 def bg_colorize(text: str, color: str) -> str:
-    """Apply ANSI background color when color is valid."""
+    """Apply ANSI background color when color is valid.
+
+    Args:
+        text: Text to color.
+        color: Background color name.
+
+    Returns:
+        str: Colored text or original text.
+    """
     prefix = ANSI_BG_COLORS.get(color, "")
     if not prefix:
         return text
@@ -74,7 +90,19 @@ def render_maze(
     wall_color: str = "default",
     pattern_color: str = "default",
 ) -> str:
-    """Return full maze drawing as one multiline string."""
+    """Render the full maze frame.
+
+    Args:
+        grid: Maze grid.
+        entry: Optional entry coordinate.
+        exit: Optional exit coordinate.
+        path: Optional path coordinates.
+        wall_color: Wall color name.
+        pattern_color: Pattern color name.
+
+    Returns:
+        str: Multi-line maze drawing.
+    """
 
     width = len(grid[0])
     height = len(grid)
@@ -121,7 +149,15 @@ def render_maze(
 def _build_wall_maps(
     grid: list[list[Cell]],
 ) -> tuple[list[list[bool]], list[list[bool]]]:
-    """Convert cell walls to horizontal and vertical segment maps."""
+    """Build wall maps from grid cell walls.
+
+    Args:
+        grid: Maze grid.
+
+    Returns:
+        tuple[list[list[bool]], list[list[bool]]]:
+            Horizontal and vertical maps.
+    """
     height = len(grid)
     width = len(grid[0])
 
@@ -154,7 +190,20 @@ def _render_junction_row(
     width: int,
     height: int,
 ) -> str:
-    """Render one row of junctions and horizontal walls."""
+    """Render one row of junctions and horizontal walls.
+
+    Args:
+        horizontal: Horizontal wall map.
+        vertical: Vertical wall map.
+        y: Junction row index.
+        wall_color: Wall color name.
+        v_edges: Path vertical edges.
+        width: Maze width.
+        height: Maze height.
+
+    Returns:
+        str: Rendered row text.
+    """
     row = ""
 
     for x in range(width + 1):
@@ -191,7 +240,24 @@ def _render_cell_row(
     pattern_color: str,
     height: int,
 ) -> str:
-    """Render one row with vertical walls and cell content."""
+    """Render one row with vertical walls and cell content.
+
+    Args:
+        grid: Maze grid.
+        vertical: Vertical wall map.
+        y: Cell row index.
+        entry: Optional entry coordinate.
+        exit: Optional exit coordinate.
+        path_cells: Cells that belong to path.
+        h_edges: Path horizontal edges.
+        v_edges: Path vertical edges.
+        wall_color: Wall color name.
+        pattern_color: Pattern color name.
+        height: Maze height.
+
+    Returns:
+        str: Rendered row text.
+    """
     width = len(grid[0])
     row = ""
 
@@ -234,7 +300,11 @@ def _render_horizontal_segment(
     wall_color: str,
     height: int,
 ) -> str:
-    """Render one segment between two maze rows."""
+    """Render one segment between two maze rows.
+
+    Returns:
+        str: Segment text.
+    """
     if horizontal[y][x]:
         return colorize("─" * CELL_WIDTH, wall_color)
 
@@ -252,7 +322,11 @@ def _render_vertical_segment(
     wall_color: str,
     width: int,
 ) -> str:
-    """Render one segment between two maze columns."""
+    """Render one segment between two maze columns.
+
+    Returns:
+        str: Segment text.
+    """
     if vertical[y][x]:
         return colorize("│", wall_color)
 
@@ -270,7 +344,11 @@ def _render_path_cell(
     width: int,
     height: int,
 ) -> str:
-    """Render center glyph for one path cell."""
+    """Render center glyph for one path cell.
+
+    Returns:
+        str: Cell text with path glyph.
+    """
     glyph = _path_glyph(v_edges, h_edges, x, y, width, height)
     return colorize(f" {glyph} ", PATH_COLOR)
 
@@ -283,7 +361,11 @@ def _path_glyph(
     width: int,
     height: int,
 ) -> str:
-    """Return a box glyph based on path neighbors."""
+    """Return a box glyph based on path neighbors.
+
+    Returns:
+        str: One glyph character.
+    """
     up = y > 0 and (x, y - 1) in v_edges
     down = y + 1 < height and (x, y) in v_edges
     left = x > 0 and (x - 1, y) in h_edges
@@ -294,7 +376,19 @@ def _path_glyph(
 def _build_path_geometry(
     path: list[tuple[int, int]] | None,
 ) -> tuple[set[tuple[int, int]], set[tuple[int, int]], set[tuple[int, int]]]:
-    """Build path cells and edges from ordered path points."""
+    """Build path cells and edges from ordered points.
+
+    Args:
+        path: Ordered path coordinates.
+
+    Returns:
+        tuple[
+            set[tuple[int, int]],
+            set[tuple[int, int]],
+            set[tuple[int, int]],
+        ]:
+            Path cells, horizontal edges, and vertical edges.
+    """
     if not path:
         return set(), set(), set()
 
@@ -326,7 +420,11 @@ def _crosses_col_boundary(
     y: int,
     width: int,
 ) -> bool:
-    """Return True if path goes through one vertical boundary."""
+    """Check if path crosses one vertical boundary.
+
+    Returns:
+        bool: ``True`` when boundary is crossed.
+    """
     if x <= 0 or x >= width:
         return False
     return (x - 1, y) in h_edges
@@ -338,7 +436,11 @@ def _crosses_row_boundary(
     y: int,
     height: int,
 ) -> bool:
-    """Return True if path goes through one horizontal boundary."""
+    """Check if path crosses one horizontal boundary.
+
+    Returns:
+        bool: ``True`` when boundary is crossed.
+    """
     if y <= 0 or y >= height:
         return False
     return (x, y - 1) in v_edges

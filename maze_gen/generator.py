@@ -1,4 +1,4 @@
-"""Generate maze grids from MazeData settings."""
+"""Generate maze grids from ``MazeData`` settings."""
 
 from collections.abc import Callable
 from maze_gen.models import Cell, Wall, MazeData
@@ -38,7 +38,11 @@ class MazeGenerator:
     P_HEIGHT = 5
 
     def __init__(self, data: MazeData) -> None:
-        """Store settings and initialize random seed."""
+        """Initialize generator state.
+
+        Args:
+            data: Maze configuration and runtime container.
+        """
 
         self.data = data
 
@@ -50,7 +54,11 @@ class MazeGenerator:
         random.seed(self.seed)
 
     def _create_grid(self) -> list[list[Cell]]:
-        """Create a new grid with all walls closed."""
+        """Create a new grid with all walls closed.
+
+        Returns:
+            list[list[Cell]]: Fresh grid with unvisited cells.
+        """
 
         return [
             [Cell(x, y) for x in range(self.width)]
@@ -58,7 +66,10 @@ class MazeGenerator:
         ]
 
     def _insert_42_pattern(self) -> None:
-        """Insert and lock the 42 pattern cells."""
+        """Insert and lock the ``42`` pattern cells.
+
+        The pattern is inserted only when maze size is large enough.
+        """
         min_width = self.P_WIDTH + 4
         min_height = self.P_HEIGHT + 4
 
@@ -94,14 +105,29 @@ class MazeGenerator:
                     cell.visited = True
 
     def _center_start(self, total_size: int, part_size: int) -> int:
-        """Return centered start index for a segment."""
+        """Compute centered start index.
+
+        Args:
+            total_size: Total available size.
+            part_size: Segment size to place.
+
+        Returns:
+            int: Start index.
+        """
         return (total_size - part_size) // 2
 
     def _get_neighbors(
         self,
         cell: Cell
     ) -> list[tuple[Cell, Wall]]:
-        """Return unvisited neighbor cells with directions."""
+        """Return unvisited neighbors and their directions.
+
+        Args:
+            cell: Source cell.
+
+        Returns:
+            list[tuple[Cell, Wall]]: Neighbor cells with wall direction.
+        """
 
         neighbors = []
 
@@ -122,7 +148,13 @@ class MazeGenerator:
         cell_b: Cell,
         direction: Wall,
     ) -> None:
-        """Open the shared wall between two cells."""
+        """Open the shared wall between two adjacent cells.
+
+        Args:
+            cell_a: First cell.
+            cell_b: Second cell.
+            direction: Direction from first cell to second cell.
+        """
         cell_a.open_wall(direction)
         opposite_dir = self.OPPOSITE[direction]
         cell_b.open_wall(opposite_dir)
@@ -132,7 +164,12 @@ class MazeGenerator:
         chance: float = 0.05,
         on_step: Callable[[MazeData], None] | None = None,
     ) -> None:
-        """Open random extra walls to create loops."""
+        """Open random extra walls to create loops.
+
+        Args:
+            chance: Probability to open one extra wall.
+            on_step: Optional callback called after each change.
+        """
         for y in range(1, self.data.height - 1):
             for x in range(1, self.data.width - 1):
                 cell = self.data.grid[y][x]
@@ -157,7 +194,7 @@ class MazeGenerator:
                             on_step(self.data)
 
     def _seal_outer_walls(self) -> None:
-        """Force all outer borders to stay closed."""
+        """Force all maze border walls to stay closed."""
         for x in range(self.width):
             self.data.grid[0][x].walls |= Wall.NORTH
             self.data.grid[self.height - 1][x].walls |= Wall.SOUTH
@@ -170,7 +207,14 @@ class MazeGenerator:
         self,
         on_step: Callable[[MazeData], None] | None = None,
     ) -> MazeData:
-        """Generate maze and return updated MazeData."""
+        """Generate maze and return updated data.
+
+        Args:
+            on_step: Optional callback called during generation.
+
+        Returns:
+            MazeData: Updated maze data with grid.
+        """
         self.data.grid = self._create_grid()
         self._insert_42_pattern()
         if on_step is not None:
@@ -211,7 +255,12 @@ class MazeGenerator:
 
     @staticmethod
     def save_maze_to_file(data: MazeData, solution_str: str) -> None:
-        """Write maze hex rows and solution data to file."""
+        """Write maze rows and solution data to output file.
+
+        Args:
+            data: Maze data with generated grid.
+            solution_str: Path solution in ``N/E/S/W`` format.
+        """
         with open(data.output_file, "w", encoding="utf-8") as file:
             for row in data.grid:
                 hex_row = "".join(cell.hex_value for cell in row)
@@ -226,5 +275,12 @@ class MazeGenerator:
         self,
         on_step: Callable[[MazeData], None] | None = None,
     ) -> MazeData:
-        """Run generation and return the maze data object."""
+        """Generate maze with optional callback.
+
+        Args:
+            on_step: Optional callback called during generation.
+
+        Returns:
+            MazeData: Generated maze data.
+        """
         return self._generate_maze(on_step=on_step)

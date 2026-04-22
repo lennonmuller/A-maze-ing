@@ -1,4 +1,4 @@
-"""Validate parsed maze config data."""
+"""Validate parsed maze configuration data."""
 
 from maze_gen.models import MazeData
 
@@ -14,14 +14,28 @@ REQUIRED_KEYS = [
 
 
 def validate_required_keys(config: dict[str, str]) -> None:
-    """Check that all required keys exist."""
+    """Check that all required keys are present.
+
+    Args:
+        config: Raw key/value map parsed from config file.
+
+    Raises:
+        KeyError: If one required key is missing.
+    """
     for key in REQUIRED_KEYS:
         if key not in config:
             raise KeyError(f"Missing required key: {key}")
 
 
 def validate_maze_data(data: MazeData) -> None:
-    """Check maze values like size, bounds, and output file name."""
+    """Validate semantic rules for maze configuration.
+
+    Args:
+        data: Parsed maze configuration.
+
+    Raises:
+        ValueError: If one configuration rule is invalid.
+    """
     if data.width <= 0 or data.height <= 0:
         raise ValueError("Width and Height must be > 0")
 
@@ -39,6 +53,15 @@ def validate_maze_data(data: MazeData) -> None:
 
 
 def _in_bounds(coord: tuple[int, int], width: int, height: int) -> bool:
-    """Return True if coordinate is inside maze area."""
+    """Check if one coordinate is inside maze bounds.
+
+    Args:
+        coord: Coordinate in ``(x, y)`` format.
+        width: Maze width.
+        height: Maze height.
+
+    Returns:
+        bool: ``True`` when coordinate is inside bounds.
+    """
     x, y = coord
     return 0 <= x < width and 0 <= y < height
