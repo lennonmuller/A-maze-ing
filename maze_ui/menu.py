@@ -67,6 +67,14 @@ def run_menu(maze_params: MazeData) -> None:
             pattern_color = _color_choice(LABEL_PATTERN_COLOR)
             update_pattern_color(state, pattern_color)
         elif choice == "5":
+            from maze_ui.actions import switch_algorithm
+            switch_algorithm(state)
+            run_with_generation_animation(
+                lambda callback: regenerate_maze(state, on_step=callback),
+                wall_color=state.wall_color,
+                pattern_color=state.pattern_color,
+            )
+        elif choice == "6":
             print(f"\n{STATUS_QUIT}")
             break
         else:

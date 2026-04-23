@@ -59,5 +59,6 @@ class MazeData:
     output_file: str
     perfect: bool
     seed: int = 42
+    algorithm: str = "DFS"
     grid: list[list[Cell]] = field(default_factory=list)
     pattern_warning: str = ""

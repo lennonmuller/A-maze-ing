@@ -9,7 +9,6 @@ from maze_gen.models import MazeData
 from maze_gen.solver import solve_shortest_path, coords_to_directions
 from maze_ui.constants import (
     APP_TITLE,
-    MENU_FOOTER_TEXT,
     STATUS_NEW_MAZE,
     STATUS_NO_PATH,
     STATUS_PATH_OFF,
@@ -148,6 +147,10 @@ def render_current_maze(
         print(state.maze_data.pattern_warning)
     print()
 
+    next_algo = "PRIM" if state.maze_params.algorithm == "DFS" else "DFS"
+    dynamic_footer = (
+        f"[1] New  [2] Path  [3] Walls  [4] 42  [5] {next_algo}  [6] Quit")
+
     maze_text = render_maze(
         state.maze_data.grid,
         entry=state.maze_data.entry,
@@ -159,7 +162,7 @@ def render_current_maze(
     for line in maze_text.splitlines():
         print(line)
 
-    print(_render_menu_box(len(state.maze_data.grid[0]), MENU_FOOTER_TEXT))
+    print(_render_menu_box(len(state.maze_data.grid[0]), dynamic_footer))
 
 
 def _generate_maze(
@@ -228,3 +231,14 @@ def _render_menu_box(grid_width: int, text: str) -> str:
     mid = "│" + text.center(inner_width) + "│"
     bot = "└" + ("─" * inner_width) + "┘"
     return "\n".join([top, mid, bot])
+
+
+def switch_algorithm(state: UIState) -> None:
+    """Switch between DFS and PRIM."""
+    if state.maze_params.algorithm == "DFS":
+        state.maze_params.algorithm = "PRIM"
+    else:
+        state.maze_params.algorithm = "DFS"
+
+    print(f"\nAlgorithm: {state.maze_params.algorithm}")
+    state.status_message = f"Algorithm: {state.maze_params.algorithm}"

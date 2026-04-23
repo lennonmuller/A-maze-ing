@@ -1,6 +1,6 @@
 """Simple constants for terminal UI text and options."""
 
-APP_TITLE = "A_MAZE_IN"
+APP_TITLE = "A_MAZE_ING"
 
 COLOR_OPTIONS = [
     "default",
@@ -13,13 +13,11 @@ COLOR_OPTIONS = [
     "white",
 ]
 
-MENU_FOOTER_TEXT = (
-    "[1] New  [2] Path  [3] Walls  [4] 42  [5] Quit"
-)
 
 PROMPT_OPTION = "Option > "
 PROMPT_COLOR = "Select color (name or number): "
 
+STATUS_ALGO_CHANGED = "Algorithm changed to "
 STATUS_READY = "Maze ready."
 STATUS_NEW_MAZE = "New maze generated."
 STATUS_PATH_ON = "Shortest path: ON."

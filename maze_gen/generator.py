@@ -220,6 +220,21 @@ class MazeGenerator:
         if on_step is not None:
             on_step(self.data)
 
+        if self.data.algorithm == "PRIM":
+            self._run_prim(on_step)
+        else:
+            self._run_dfs(on_step)
+
+        if not self.data.perfect:
+            self._imperfect_maze(on_step=on_step)
+
+        self._seal_outer_walls()
+        return self.data
+
+    def _run_dfs(
+        self,
+        on_step: Callable[[MazeData], None] | None = None
+    ) -> None:
         start_x, start_y = self.data.entry
         start_cell = self.data.grid[start_y][start_x]
 
@@ -234,8 +249,7 @@ class MazeGenerator:
             if neighbors:
                 next_cell, direction = random.choice(neighbors)
 
-                current.open_wall(direction)
-                next_cell.open_wall(self.OPPOSITE[direction])
+                self._remove_walls(current, next_cell, direction)
 
                 next_cell.visited = True
                 stack.append(next_cell)
@@ -244,14 +258,43 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-        if not self.data.perfect:
-            self._imperfect_maze(on_step=on_step)
+    def _run_prim(
+        self,
+        on_step: Callable[[MazeData], None] | None = None
+    ) -> None:
+        """Simplificated PRIM Algorithm"""
+        start_x, start_y = self.data.entry
+        start_cell = self.data.grid[start_y][start_x]
+        start_cell.visited = True
 
-        self._seal_outer_walls()
-        if on_step is not None:
-            on_step(self.data)
+        frontier = self._get_neighbors(start_cell)
 
-        return self.data
+        while frontier:
+            cell, _ = random.choice(frontier)
+            frontier = [f for f in frontier if f[0] != cell]
+
+            if cell.visited:
+                continue
+
+            visited_neighbors = []
+            for (dx, dy), direction in self.DIRECTIONS.items():
+                nx, ny = cell.x + dx, cell.y + dy
+                if 0 <= nx < self.width and 0 <= ny < self.height:
+                    neighbor = self.data.grid[ny][nx]
+                    if neighbor.visited and (nx, ny) not in self.pattern_cells:
+                        visited_neighbors.append((neighbor, direction))
+
+            if visited_neighbors:
+                neighbor, direction = random.choice(visited_neighbors)
+                direction_from_neighbor = self.OPPOSITE[direction]
+                self._remove_walls(neighbor, cell, direction_from_neighbor)
+
+                cell.visited = True
+                if on_step:
+                    on_step(self.data)
+
+                new_neighbors = self._get_neighbors(cell)
+                frontier.extend(new_neighbors)
 
     @staticmethod
     def save_maze_to_file(data: MazeData, solution_str: str) -> None:

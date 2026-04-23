@@ -68,8 +68,8 @@ def build_generation_callback(
     """
     last_draw = 0.0
     step_count = 0
-    min_frame_interval = 0.02
-    draw_every_steps = 4
+    min_frame_interval = 0.05
+    draw_every_steps = 1
 
     def _on_step(data: MazeData) -> None:
         nonlocal last_draw, step_count
@@ -93,7 +93,7 @@ def build_generation_callback(
         print(CLEAR_HOME, end="", flush=True)
         print(f"{STATUS_GENERATING_PREFIX}...", flush=True)
         print(frame, flush=True)
-        time.sleep(0.008)
+        time.sleep(0.005)
 
     return _on_step
 
