@@ -1,6 +1,11 @@
 """Validate parsed maze configuration data."""
 
 from maze_gen.models import MazeData
+from maze_config.constants import (
+    MAX_MAZE_AREA,
+    MAX_MAZE_HEIGHT,
+    MAX_MAZE_WIDTH,
+)
 
 
 REQUIRED_KEYS = [
@@ -38,6 +43,23 @@ def validate_maze_data(data: MazeData) -> None:
     """
     if data.width <= 0 or data.height <= 0:
         raise ValueError("Width and Height must be > 0")
+
+    if data.width > MAX_MAZE_WIDTH:
+        raise ValueError(
+            f"Width is too large for terminal UI (max {MAX_MAZE_WIDTH})"
+        )
+
+    if data.height > MAX_MAZE_HEIGHT:
+        raise ValueError(
+            f"Height is too large for terminal UI (max {MAX_MAZE_HEIGHT})"
+        )
+
+    area = data.width * data.height
+    if area > MAX_MAZE_AREA:
+        raise ValueError(
+            f"Maze area is too large for terminal UI "
+            f"(max {MAX_MAZE_AREA} cells)"
+        )
 
     if not _in_bounds(data.entry, data.width, data.height):
         raise ValueError("Entry is outside maze bounds")

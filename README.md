@@ -89,6 +89,12 @@ Optional keys used in this project:
 
 - `SEED` (int, default is `42`)
 
+Terminal UI size limits (to keep rendering readable):
+
+- `WIDTH <= 35`
+- `HEIGHT <= 20`
+- `WIDTH * HEIGHT <= 700`
+
 Example:
 
 ```txt

@@ -9,11 +9,17 @@ from maze_gen.models import MazeData
 from maze_gen.solver import solve_shortest_path, coords_to_directions
 from maze_ui.constants import (
     APP_TITLE,
+    FIXED_UI_WIDTH_CELLS,
+    MENU_FOOTER_TEMPLATE,
     STATUS_NEW_MAZE,
     STATUS_NO_PATH,
     STATUS_PATH_OFF,
     STATUS_PATH_ON,
     STATUS_READY,
+    UI_CELL_RENDER_WIDTH,
+    UI_FRAME_BORDER_DISCOUNT,
+    UI_FRAME_EXTRA_WIDTH,
+    UI_MIN_INNER_WIDTH,
 )
 from maze_ui.state import UIState
 
@@ -138,18 +144,8 @@ def render_current_maze(
         else _maze_path_set(state)
     )
 
-    print("╔══════════════════════════════════════════════╗")
-    print(f"║{APP_TITLE:^46}║")
-    print("╚══════════════════════════════════════════════╝")
-    if state.status_message:
-        print(state.status_message)
-    if state.maze_data.pattern_warning:
-        print(state.maze_data.pattern_warning)
-    print()
-
     next_algo = "PRIM" if state.maze_params.algorithm == "DFS" else "DFS"
-    dynamic_footer = (
-        f"[1] New  [2] Path  [3] Walls  [4] 42  [5] {next_algo}  [6] Quit")
+    dynamic_footer = MENU_FOOTER_TEMPLATE.format(next_algo=next_algo)
 
     maze_text = render_maze(
         state.maze_data.grid,
@@ -159,10 +155,23 @@ def render_current_maze(
         wall_color=state.wall_color,
         pattern_color=state.pattern_color,
     )
-    for line in maze_text.splitlines():
+    maze_lines = maze_text.splitlines()
+    maze_width = (
+        state.maze_data.width * UI_CELL_RENDER_WIDTH
+        + UI_FRAME_EXTRA_WIDTH
+    )
+
+    print(_center_block(_render_title_box(APP_TITLE), maze_width))
+    if state.status_message:
+        print(state.status_message)
+    if state.maze_data.pattern_warning:
+        print(state.maze_data.pattern_warning)
+    print()
+
+    for line in maze_lines:
         print(line)
 
-    print(_render_menu_box(len(state.maze_data.grid[0]), dynamic_footer))
+    print(_center_block(_render_menu_box(dynamic_footer), maze_width))
 
 
 def _generate_maze(
@@ -211,18 +220,32 @@ def _maze_path_set(state: UIState) -> list[tuple[int, int]] | None:
     return path
 
 
-def _render_menu_box(grid_width: int, text: str) -> str:
-    """Render a framed text box for menu options.
+def _render_title_box(text: str) -> str:
+    """Render the fixed-width application title box.
 
     Args:
-        grid_width: Maze width used to scale box size.
+        text: Title text.
+
+    Returns:
+        str: Box text with three lines.
+    """
+    inner_width = _fixed_inner_width()
+    top = "╔" + ("═" * inner_width) + "╗"
+    mid = "║" + text.center(inner_width) + "║"
+    bot = "╚" + ("═" * inner_width) + "╝"
+    return "\n".join([top, mid, bot])
+
+
+def _render_menu_box(text: str) -> str:
+    """Render a fixed-width framed text box for menu options.
+
+    Args:
         text: Footer menu text.
 
     Returns:
         str: Box text with three lines.
     """
-    frame_width = grid_width * 4 + 1
-    inner_width = max(16, frame_width - 2)
+    inner_width = _fixed_inner_width()
 
     if len(text) > inner_width:
         text = text[:inner_width]
@@ -231,6 +254,35 @@ def _render_menu_box(grid_width: int, text: str) -> str:
     mid = "│" + text.center(inner_width) + "│"
     bot = "└" + ("─" * inner_width) + "┘"
     return "\n".join([top, mid, bot])
+
+
+def _fixed_inner_width() -> int:
+    """Return fixed inner width used by title and menu boxes."""
+    frame_width = (
+        FIXED_UI_WIDTH_CELLS * UI_CELL_RENDER_WIDTH
+        + UI_FRAME_EXTRA_WIDTH
+    )
+    return max(UI_MIN_INNER_WIDTH, frame_width - UI_FRAME_BORDER_DISCOUNT)
+
+
+def _center_block(block_text: str, container_width: int) -> str:
+    """Center a multi-line block inside one container width.
+
+    Args:
+        block_text: Block text with one or more lines.
+        container_width: Width used as centering reference.
+
+    Returns:
+        str: Centered block text.
+    """
+    lines = block_text.splitlines()
+    block_width = max((len(line) for line in lines), default=0)
+
+    if container_width <= block_width:
+        return block_text
+
+    left_padding = " " * ((container_width - block_width) // 2)
+    return "\n".join(left_padding + line for line in lines)
 
 
 def switch_algorithm(state: UIState) -> None:

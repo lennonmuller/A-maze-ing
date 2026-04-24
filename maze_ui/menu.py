@@ -7,8 +7,15 @@ from maze_ui.animations import (
 )
 from maze_ui.constants import (
     COLOR_OPTIONS,
+    DEFAULT_COLOR,
     LABEL_PATTERN_COLOR,
     LABEL_WALL_COLOR,
+    MENU_OPTION_ALGORITHM,
+    MENU_OPTION_NEW,
+    MENU_OPTION_PATH,
+    MENU_OPTION_PATTERN,
+    MENU_OPTION_QUIT,
+    MENU_OPTION_WALLS,
     PROMPT_COLOR,
     PROMPT_OPTION,
     STATUS_INVALID_COLOR,
@@ -36,8 +43,8 @@ def run_menu(maze_params: MazeData) -> None:
             maze_params,
             on_step=callback,
         ),
-        wall_color="default",
-        pattern_color="default",
+        wall_color=DEFAULT_COLOR,
+        pattern_color=DEFAULT_COLOR,
     )
 
     while True:
@@ -46,7 +53,7 @@ def run_menu(maze_params: MazeData) -> None:
 
         choice = _menu_choice()
 
-        if choice == "1":
+        if choice == MENU_OPTION_NEW:
             run_with_generation_animation(
                 lambda callback: regenerate_maze(
                     state,
@@ -55,18 +62,18 @@ def run_menu(maze_params: MazeData) -> None:
                 wall_color=state.wall_color,
                 pattern_color=state.pattern_color,
             )
-        elif choice == "2":
+        elif choice == MENU_OPTION_PATH:
             if state.show_path:
                 toggle_path(state)
             else:
                 animate_path_reveal(state)
-        elif choice == "3":
+        elif choice == MENU_OPTION_WALLS:
             wall_color = _color_choice(LABEL_WALL_COLOR)
             update_wall_color(state, wall_color)
-        elif choice == "4":
+        elif choice == MENU_OPTION_PATTERN:
             pattern_color = _color_choice(LABEL_PATTERN_COLOR)
             update_pattern_color(state, pattern_color)
-        elif choice == "5":
+        elif choice == MENU_OPTION_ALGORITHM:
             from maze_ui.actions import switch_algorithm
             switch_algorithm(state)
             run_with_generation_animation(
@@ -74,7 +81,7 @@ def run_menu(maze_params: MazeData) -> None:
                 wall_color=state.wall_color,
                 pattern_color=state.pattern_color,
             )
-        elif choice == "6":
+        elif choice == MENU_OPTION_QUIT:
             print(f"\n{STATUS_QUIT}")
             break
         else:
@@ -115,4 +122,4 @@ def _color_choice(title: str) -> str:
         return selected
 
     print(STATUS_INVALID_COLOR)
-    return "default"
+    return DEFAULT_COLOR

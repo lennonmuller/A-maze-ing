@@ -12,17 +12,21 @@ from maze_ui.actions import (
     toggle_path,
 )
 from maze_ui.constants import (
+    ALT_SCREEN_OFF,
+    ALT_SCREEN_ON,
+    ANIM_DRAW_EVERY_STEPS,
+    ANIM_MIN_FRAME_INTERVAL,
+    ANIM_STEP_SLEEP_SECONDS,
+    CLEAR_HOME,
+    HIDE_CURSOR,
+    PATH_REVEAL_MAX_STEPS,
+    PATH_REVEAL_SLEEP_SECONDS,
+    SHOW_CURSOR,
     STATUS_DRAWING_PATH,
     STATUS_GENERATING_PREFIX,
     STATUS_NO_PATH,
 )
 from maze_ui.state import UIState
-
-ALT_SCREEN_ON = "\033[?1049h"
-ALT_SCREEN_OFF = "\033[?1049l"
-HIDE_CURSOR = "\033[?25l"
-SHOW_CURSOR = "\033[?25h"
-CLEAR_HOME = "\033[2J\033[H"
 
 T = TypeVar("T")
 
@@ -68,8 +72,6 @@ def build_generation_callback(
     """
     last_draw = 0.0
     step_count = 0
-    min_frame_interval = 0.05
-    draw_every_steps = 1
 
     def _on_step(data: MazeData) -> None:
         nonlocal last_draw, step_count
@@ -77,8 +79,10 @@ def build_generation_callback(
         step_count += 1
 
         now = time.perf_counter()
-        is_regular_frame = (step_count % draw_every_steps) == 0
-        if not is_regular_frame and (now - last_draw) < min_frame_interval:
+        is_regular_frame = (step_count % ANIM_DRAW_EVERY_STEPS) == 0
+        if not is_regular_frame and (
+            now - last_draw
+        ) < ANIM_MIN_FRAME_INTERVAL:
             return
         last_draw = now
 
@@ -93,7 +97,7 @@ def build_generation_callback(
         print(CLEAR_HOME, end="", flush=True)
         print(f"{STATUS_GENERATING_PREFIX}...", flush=True)
         print(frame, flush=True)
-        time.sleep(0.005)
+        time.sleep(ANIM_STEP_SLEEP_SECONDS)
 
     return _on_step
 
@@ -110,15 +114,19 @@ def animate_path_reveal(state: UIState) -> None:
         return
 
     total = len(path_coords)
-    steps = min(total, 30)
+    steps = min(total, PATH_REVEAL_MAX_STEPS)
     stride = max(1, total // steps)
 
-    for end in range(1, total + 1, stride):
-        state.status_message = STATUS_DRAWING_PATH
-        partial = path_coords[:end]
-        print()
-        render_current_maze(state, path_override=partial)
-        time.sleep(0.02)
+    _enter_animation_screen()
+    try:
+        for end in range(1, total + 1, stride):
+            state.status_message = STATUS_DRAWING_PATH
+            partial = path_coords[:end]
+            print(CLEAR_HOME, end="", flush=True)
+            render_current_maze(state, path_override=partial)
+            time.sleep(PATH_REVEAL_SLEEP_SECONDS)
+    finally:
+        _leave_animation_screen()
 
     if not state.show_path:
         toggle_path(state)
