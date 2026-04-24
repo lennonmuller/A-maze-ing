@@ -77,6 +77,7 @@ def build_generation_callback(
         nonlocal last_draw, step_count
 
         step_count += 1
+        print(CLEAR_HOME, end="", flush=True)
 
         now = time.perf_counter()
         is_regular_frame = (step_count % ANIM_DRAW_EVERY_STEPS) == 0
