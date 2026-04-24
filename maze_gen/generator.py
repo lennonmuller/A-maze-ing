@@ -82,10 +82,24 @@ class MazeGenerator:
             )
             return
 
-        self.data.pattern_warning = ""
-
         start_x = self._center_start(self.data.width, PATTERN_42_WIDTH)
         start_y = self._center_start(self.data.height, PATTERN_42_HEIGHT)
+
+        end_x = start_x + PATTERN_42_WIDTH
+        end_y = start_y + PATTERN_42_HEIGHT
+
+        entry_x, entry_y = self.data.entry
+        exit_x, exit_y = self.data.exit
+
+        if (start_x <= entry_x < end_x or start_y <= entry_y < end_y) \
+                or (start_x <= exit_x < end_x or start_y <= exit_y < end_y):
+            self.data.pattern_warning = (
+                "Warning: Entry/Exit cannot be inside of 42 pattern.\n"
+                "Couldn`t show pattern with these coordinates."
+            )
+            return
+
+        self.data.pattern_warning = ""
 
         self.pattern_cells.clear()
 
