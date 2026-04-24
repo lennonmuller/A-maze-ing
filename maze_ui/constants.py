@@ -14,6 +14,8 @@ UI_MIN_INNER_WIDTH = 16
 
 # Menu behavior and labels
 DEFAULT_COLOR = "default"
+DEFAULT_WALL_COLOR = "red"
+DEFAULT_PATTERN_COLOR = "green"
 MENU_OPTION_NEW = "1"
 MENU_OPTION_PATH = "2"
 MENU_OPTION_WALLS = "3"
@@ -25,7 +27,6 @@ MENU_FOOTER_TEMPLATE = (
 )
 
 COLOR_OPTIONS = [
-    DEFAULT_COLOR,
     "red",
     "green",
     "yellow",
@@ -49,20 +50,20 @@ STATUS_PATH_OFF = "Shortest path: OFF."
 STATUS_NO_PATH = "No valid path between entry and exit."
 STATUS_DRAWING_PATH = "Drawing shortest path..."
 STATUS_INVALID_OPTION = "Invalid option. Choose 1 to 6."
-STATUS_INVALID_COLOR = "Invalid color. Keeping 'default'."
+STATUS_INVALID_COLOR = "Invalid color. Keeping current color."
 STATUS_GENERATING_PREFIX = "Generating maze"
-STATUS_QUIT = "Exiting application. See you next time."
+STATUS_QUIT = "Exiting program. See you next time."
 
 # Terminal control sequences
 ALT_SCREEN_ON = "\033[?1049h"
 ALT_SCREEN_OFF = "\033[?1049l"
 HIDE_CURSOR = "\033[?25l"
 SHOW_CURSOR = "\033[?25h"
-CLEAR_HOME = "\033[2J\033[H"
+CLEAR_HOME = "\033[3J\033[2J\033[H"
 
 # Animation tuning
-ANIM_MIN_FRAME_INTERVAL = 0.05
+ANIM_MIN_FRAME_INTERVAL = 0.03
 ANIM_DRAW_EVERY_STEPS = 1
-ANIM_STEP_SLEEP_SECONDS = 0.005
-PATH_REVEAL_MAX_STEPS = 30
-PATH_REVEAL_SLEEP_SECONDS = 0.02
+ANIM_STEP_SLEEP_SECONDS = 0.0012
+PATH_REVEAL_MAX_STEPS = 50
+PATH_REVEAL_SLEEP_SECONDS = 0.016

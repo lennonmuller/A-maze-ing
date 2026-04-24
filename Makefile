@@ -1,15 +1,47 @@
-run:
-	@echo "Running the maze application with the default config file..."
-	python3 a_maze_ing.py config.txt
+PYTHON ?= python3
+VENV := .venv
+PY := $(VENV)/bin/python
+PIP := $(PY) -m pip
+MAIN := a_maze_ing.py
+CONFIG := config.txt
+ENV_READY := $(VENV)/.ready
 
-install:
+help:
+	@echo "Available targets:"
+	@echo "  make install     Create .venv and install dependencies"
+	@echo "  make run         Run a_maze_ing with config.txt"
+	@echo "  make debug       Run a_maze_ing with pdb"
+	@echo "  make lint        Run flake8 and mypy"
+	@echo "  make lint-strict Run flake8 and strict mypy"
+	@echo "  make build       Build source and wheel package"
+	@echo "  make clean       Remove caches and build artifacts"
+	@echo "  make fclean      Run clean and remove .venv"
+
+run: check-venv
+	@echo "Running the a_maze_ing program with the default config file..."
+	$(PY) $(MAIN) $(CONFIG)
+
+
+install: $(ENV_READY)
+	@echo "Environment is ready."
+
+$(PY):
+	@echo "Creating virtual environment in $(VENV)..."
+	$(PYTHON) -m venv $(VENV)
+
+$(ENV_READY): requirements.txt pyproject.toml | $(PY)
 	@echo "Installing project dependencies and editable package..."
-	python3 -m pip install -r requirements.txt
-	python3 -m pip install -e .
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install -e .
+	@touch $(ENV_READY)
 
-debug:
-	@echo "Starting the maze application in Python debugger mode (pdb)..."
-	python3 -m pdb a_maze_ing.py config.txt
+check-venv:
+	@test -x "$(PY)" || (echo "Virtual environment not found. Run 'make install' first." && exit 1)
+
+debug: check-venv
+	@echo "Starting the a_maze_ing program in Python debugger mode (pdb)..."
+	$(PY) -m pdb $(MAIN) $(CONFIG)
 
 clean:
 	@echo "Cleaning Python caches, build artifacts, and generated output files..."
@@ -21,19 +53,23 @@ clean:
 	rm -f maze.txt
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
-lint:
+fclean: clean
+	@echo "Removing virtual environment..."
+	rm -rf $(VENV)
+
+lint: check-venv
 	@echo "Running flake8 and mypy checks with required subject flags..."
-	python3 -m flake8 a_maze_ing.py maze_config maze_display maze_gen maze_ui
-	python3 -m mypy a_maze_ing.py maze_config maze_display maze_gen maze_ui --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	$(PY) -m flake8 a_maze_ing.py maze_config maze_display maze_gen maze_ui
+	$(PY) -m mypy a_maze_ing.py maze_config maze_display maze_gen maze_ui --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-lint-strict:
+lint-strict: check-venv
 	@echo "Running strict flake8 and mypy checks..."
-	python3 -m flake8 a_maze_ing.py maze_config maze_display maze_gen maze_ui
-	python3 -m mypy a_maze_ing.py maze_config maze_display maze_gen maze_ui --strict
+	$(PY) -m flake8 a_maze_ing.py maze_config maze_display maze_gen maze_ui
+	$(PY) -m mypy a_maze_ing.py maze_config maze_display maze_gen maze_ui --strict
 
-build:
+build: check-venv
 	@echo "Building source and wheel distributions for the project package..."
-	python3 -m pip install build
-	python3 -m build
+	$(PIP) install build
+	$(PY) -m build
 
-.PHONY: run install debug clean lint lint-strict build
+.PHONY: help run install check-venv debug clean fclean lint lint-strict build

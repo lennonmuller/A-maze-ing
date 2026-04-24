@@ -6,7 +6,7 @@ from maze_ui.menu import run_menu
 
 
 def main() -> None:
-    """Run the main application flow.
+    """Run the main program flow.
 
     Reads the config path from command-line arguments, parses the
     configuration file, and starts the interactive menu.

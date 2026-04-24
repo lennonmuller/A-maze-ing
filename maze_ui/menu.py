@@ -6,8 +6,10 @@ from maze_ui.animations import (
     run_with_generation_animation,
 )
 from maze_ui.constants import (
+    CLEAR_HOME,
     COLOR_OPTIONS,
-    DEFAULT_COLOR,
+    DEFAULT_PATTERN_COLOR,
+    DEFAULT_WALL_COLOR,
     LABEL_PATTERN_COLOR,
     LABEL_WALL_COLOR,
     MENU_OPTION_ALGORITHM,
@@ -43,12 +45,12 @@ def run_menu(maze_params: MazeData) -> None:
             maze_params,
             on_step=callback,
         ),
-        wall_color=DEFAULT_COLOR,
-        pattern_color=DEFAULT_COLOR,
+        wall_color=DEFAULT_WALL_COLOR,
+        pattern_color=DEFAULT_PATTERN_COLOR,
     )
 
     while True:
-        print()
+        print(CLEAR_HOME, end="", flush=True)
         render_current_maze(state)
 
         choice = _menu_choice()
@@ -68,10 +70,13 @@ def run_menu(maze_params: MazeData) -> None:
             else:
                 animate_path_reveal(state)
         elif choice == MENU_OPTION_WALLS:
-            wall_color = _color_choice(LABEL_WALL_COLOR)
+            wall_color = _color_choice(LABEL_WALL_COLOR, state.wall_color)
             update_wall_color(state, wall_color)
         elif choice == MENU_OPTION_PATTERN:
-            pattern_color = _color_choice(LABEL_PATTERN_COLOR)
+            pattern_color = _color_choice(
+                LABEL_PATTERN_COLOR,
+                state.pattern_color,
+            )
             update_pattern_color(state, pattern_color)
         elif choice == MENU_OPTION_ALGORITHM:
             from maze_ui.actions import switch_algorithm
@@ -97,14 +102,15 @@ def _menu_choice() -> str:
     return input(PROMPT_OPTION).strip()
 
 
-def _color_choice(title: str) -> str:
+def _color_choice(title: str, current_color: str) -> str:
     """Read one color by name or numeric index.
 
     Args:
         title: Prompt title shown before options.
+        current_color: Current color kept on invalid selection.
 
     Returns:
-        str: Selected color or ``default``.
+        str: Selected color or current color.
     """
     options_line = "  ".join(
         f"{idx}) {color}" for idx, color in enumerate(COLOR_OPTIONS, 1)
@@ -122,4 +128,4 @@ def _color_choice(title: str) -> str:
         return selected
 
     print(STATUS_INVALID_COLOR)
-    return DEFAULT_COLOR
+    return current_color

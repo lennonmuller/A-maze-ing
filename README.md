@@ -11,41 +11,48 @@ Goal of the project:
 - Read maze settings from a config file.
 - Generate a valid maze (perfect or imperfect).
 - Save maze data and solution path to an output file.
-- Show a visual maze in terminal.
+- Show the maze visually in the terminal.
 
-Short overview:
+Project flow:
 
-- Main entry point reads one config file.
-- Config parser validates all required values.
-- Generator builds maze grid using DFS or PRIM.
-- Solver uses BFS to get shortest path.
-- Terminal UI lets user regenerate maze, show path, and change colors.
+- The entry point reads one config file.
+- The parser validates required values.
+- The generator builds the maze with DFS or PRIM.
+- The solver uses BFS to find the shortest path.
+- The terminal UI allows maze regeneration, path toggle, and color changes.
 
 ## Instructions
 
 ### Requirements
 
 - Python 3.10+
-- Virtual environment recommended
+- Make
 
 ### Installation
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 make install
 ```
+
+What this does:
+
+- Creates `.venv` automatically (if missing)
+- Installs/updates pip inside `.venv`
+- Installs dependencies from `requirements.txt`
+- Installs the project in editable mode (`-e .`)
 
 ### Run
 
 ```bash
-python3 a_maze_ing.py config.txt
+make run
 ```
 
-Or:
+`make run` always uses the `config.txt` file from the project root.
+
+To list all commands:
 
 ```bash
-make run
+make help
 ```
 
 ### Debug
@@ -90,7 +97,7 @@ Optional keys used in this project:
 - `SEED` (int, default is `42`)
 - `ALGORITHM` (`DFS` or `PRIM`, default is `DFS`)
 
-Terminal UI size limits (to keep rendering readable):
+Terminal UI size limits (for readability):
 
 - `WIDTH <= 35`
 - `HEIGHT <= 20`
@@ -137,7 +144,7 @@ For imperfect mazes (`PERFECT=False`):
 
 - The generator opens extra random walls to create loops.
 
-How to choose during execution:
+How to choose:
 
 - By config: set `ALGORITHM=DFS` or `ALGORITHM=PRIM`.
 - In terminal UI: option `[5]` switches between DFS and PRIM and regenerates.
@@ -151,13 +158,13 @@ How to choose during execution:
 
 ## Reusable Code
 
-Reusable part is the maze core package (`maze_gen`):
+The reusable part is the maze core package (`maze_gen`):
 
 - Data model (`MazeData`, `Cell`, `Wall`)
 - Maze generator (`MazeGenerator`)
 - Maze solver (`solve_shortest_path`, `coords_to_directions`)
 
-How to reuse:
+How to reuse it:
 
 - Import from `maze_gen` in another Python project.
 - Build and install package with `make build`.
@@ -170,7 +177,7 @@ Build artifacts:
 	- `mazegen-<version>.tar.gz`
 	- `mazegen-<version>-py3-none-any.whl`
 
-Short usage example (instantiate, customize, access structure, access solution):
+Usage example:
 
 ```python
 from maze_gen import MazeData, MazeGenerator
@@ -209,26 +216,49 @@ directions = coords_to_directions(path)
 
 ### Team Roles
 
-- eamaral-: [to fill]
-- lmuler-f: [to fill]
+- eamaral-:
+	- Organized the repository and folder structure.
+	- Built the animation, terminal UI and render.
+	- Helped integrate the algorithm layer with the UI.
+- lmuler-f:
+	- Implemented the maze generator and algorithms.
+	- Structured and maintained the project Makefile.
+	- Kept imports coherent across modules during integration.
+	- Helped keep the package exportable and ready for build (source/wheel flow).
+- Shared ownership:
+	- Both collaborated in planning, review, and support across all parts of the implementation.
 
 ### Planning (Initial vs Final)
 
-- Initial plan: [to fill]
-- Changes during project: [to fill]
-- Final delivery plan: [to fill]
+- Initial plan:
+	- Split work between UI flow and maze core, then integrate everything in one CLI program.
+- Changes during project:
+	- Expanded the bonus scope by keeping both DFS and PRIM available at runtime.
+	- Refined architecture by separating responsibilities into `maze_config`, `maze_gen`, `maze_display`, and `maze_ui`.
+	- Improved terminal usability with animation and clearer status messages.
+- Final delivery plan:
+	- Make sure everything works smoothly end to end, from config parsing to maze generation, solving, and terminal display.
+	- Keep the project setup straightforward, with simple commands to install, run, lint, and build.
+	- Deliver clear documentation so anyone reviewing the project can quickly understand what we built and how we split responsibilities.
 
 ### What Worked Well
 
-- [to fill]
+- Clear modular separation made features easier to evolve.
+- Shared constants made teamwork faster: both contributors could test features and adjust values without re-reading the whole codebase.
+- Using dataclasses helped a lot: less boilerplate, cleaner models, and simpler integration between parser, generator, solver, and UI.
 
 ### What Can Be Improved
 
-- [to fill]
+- Add an optional solver visualization mode that shows explored paths before highlighting the final shortest path.
+- Add a side-by-side comparison mode (DFS vs PRIM) using the same dimensions and seed.
 
 ### Tools Used
 
-- [to fill]
+- Python 3.10+
+- Make
+- flake8
+- mypy
+- pytest / pytest-cov
 
 ## Resources
 
@@ -244,6 +274,5 @@ Classic references:
 
 AI usage in this project:
 
-- AI was used as docstring cleanup, and consistency checks.
-- AI was also used to help review typing, lint issues, and README structure.
-- Final design choices, code decisions, and validation were reviewed by the team.
+- AI was used for docstring cleanup and consistency checks.
+- AI was also used to review type hints and README structure.

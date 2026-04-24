@@ -221,7 +221,7 @@ def _maze_path_set(state: UIState) -> list[tuple[int, int]] | None:
 
 
 def _render_title_box(text: str) -> str:
-    """Render the fixed-width application title box.
+    """Render the fixed-width program title box.
 
     Args:
         text: Title text.
