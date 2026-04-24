@@ -2,6 +2,11 @@
 
 from dataclasses import dataclass, field
 from enum import IntEnum
+from maze_gen.constants import (
+    CELL_ALL_WALLS_MASK,
+    DEFAULT_ALGORITHM,
+    DEFAULT_SEED,
+)
 
 
 class Wall(IntEnum):
@@ -17,7 +22,7 @@ class Cell:
     """Represent one maze cell with walls and visit state."""
     x: int
     y: int
-    walls: int = 15
+    walls: int = CELL_ALL_WALLS_MASK
     visited: bool = False
 
     def open_wall(self, wall: Wall) -> None:
@@ -58,7 +63,7 @@ class MazeData:
     exit: tuple[int, int]
     output_file: str
     perfect: bool
-    seed: int = 42
-    algorithm: str = "DFS"
+    seed: int = DEFAULT_SEED
+    algorithm: str = DEFAULT_ALGORITHM
     grid: list[list[Cell]] = field(default_factory=list)
     pattern_warning: str = ""

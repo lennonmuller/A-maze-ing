@@ -17,7 +17,7 @@ Short overview:
 
 - Main entry point reads one config file.
 - Config parser validates all required values.
-- Generator builds maze grid using a DFS backtracking approach.
+- Generator builds maze grid using DFS or PRIM.
 - Solver uses BFS to get shortest path.
 - Terminal UI lets user regenerate maze, show path, and change colors.
 
@@ -88,6 +88,7 @@ Required keys:
 Optional keys used in this project:
 
 - `SEED` (int, default is `42`)
+- `ALGORITHM` (`DFS` or `PRIM`, default is `DFS`)
 
 Terminal UI size limits (to keep rendering readable):
 
@@ -105,15 +106,17 @@ EXIT=14,10
 OUTPUT_FILE=maze.txt
 PERFECT=True
 SEED=42
+ALGORITHM=DFS
 ```
 
-## Maze Generation Algorithm
+## Maze Generation Algorithms
 
-Chosen algorithm:
+Implemented algorithms:
 
-- Depth-First Search (DFS) with backtracking (stack-based).
+- Depth-First Search (DFS) with backtracking (stack-based)
+- Randomized Prim (PRIM)
 
-How it works in simple steps:
+How DFS works:
 
 - Start from entry cell.
 - Visit one random unvisited neighbor.
@@ -121,16 +124,30 @@ How it works in simple steps:
 - Continue until dead end.
 - Backtrack using stack until all cells are visited.
 
+How PRIM works:
+
+- Start from entry cell and mark it as visited.
+- Add its unvisited neighbors to a frontier list.
+- Pick a random frontier cell.
+- Connect it to one random visited neighbor.
+- Mark it visited and add its unvisited neighbors to frontier.
+- Repeat until frontier is empty.
+
 For imperfect mazes (`PERFECT=False`):
 
 - The generator opens extra random walls to create loops.
 
-## Why This Algorithm
+How to choose during execution:
 
-- Easy to implement and debug.
-- Produces connected mazes with good variety.
-- Good performance for the required maze sizes.
-- Easy to extend with step callbacks for animation.
+- By config: set `ALGORITHM=DFS` or `ALGORITHM=PRIM`.
+- In terminal UI: option `[5]` switches between DFS and PRIM and regenerates.
+
+## Why These Algorithms
+
+- DFS is simple, fast, and produces long corridor-like structures.
+- PRIM provides a different maze style with more local branching.
+- Both are connected by construction and fit the project constraints.
+- Keeping both gives visual variety and supports side-by-side comparison.
 
 ## Reusable Code
 
@@ -145,6 +162,41 @@ How to reuse:
 - Import from `maze_gen` in another Python project.
 - Build and install package with `make build`.
 - Use `MazeGenerator` and solver functions without the terminal UI.
+
+Build artifacts:
+
+- Package distribution name is `mazegen`.
+- Running `make build` generates standard files in `dist/`:
+	- `mazegen-<version>.tar.gz`
+	- `mazegen-<version>-py3-none-any.whl`
+
+Short usage example (instantiate, customize, access structure, access solution):
+
+```python
+from maze_gen import MazeData, MazeGenerator
+from maze_gen import solve_shortest_path, coords_to_directions
+
+params = MazeData(
+	width=20,
+	height=12,
+	entry=(0, 0),
+	exit=(19, 11),
+	output_file="maze.txt",
+	perfect=True,
+	seed=123,
+	algorithm="PRIM",
+)
+
+generator = MazeGenerator(params)
+maze = generator.get_maze()
+
+# Access generated structure
+grid = maze.grid
+
+# Access one shortest solution
+path = solve_shortest_path(grid, maze.entry, maze.exit)
+directions = coords_to_directions(path)
+```
 
 ## Advanced Features Implemented
 

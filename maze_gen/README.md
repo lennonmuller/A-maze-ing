@@ -1,134 +1,110 @@
-*This project has been created as part of the 42 curriculum by eamaral-, lmuler-f*
+*This project has been created as part of the 42 curriculum by eamaral-, lmuler-f.*
 
-# MazeGen - Reusable Maze Generator Module (Short Documentation)
 # MazeGen - Reusable Maze Generator Module
 
-A standalone Python module for generating and solving mazes.
+Standalone Python module for generating and solving mazes.
+
+## Package Name and Build Output
+
+- Distribution/package name: `mazegen`
+- Import name: `maze_gen`
+- Standard build outputs in `dist/`:
+    - `mazegen-<version>.tar.gz`
+    - `mazegen-<version>-py3-none-any.whl`
 
 ## Installation
 
-Install the `mazegen` package from the wheel distribution:
+Install from a built artifact:
 
 ```bash
-pip install mazegen-1.0.0-py3-none-any.whl
+pip install dist/mazegen-1.0.0-py3-none-any.whl
+```
+
+Or install from source (editable):
+
+```bash
+pip install -e .
 ```
 
 ## Quick Start
 
-### Basic Usage
-
-After installation, import directly from `maze_gen`:
-
 ```python
-from maze_gen import MazeGenerator, MazeData, solve_shortest_path, coords_to_directions
-
-# 1. Create maze configuration
-maze_config = MazeData(
-    width=20,
-    height=15,
-    entry=(0, 0),
-    exit=(19, 14),
-    output_file="maze.txt",
-    perfect=True,
-    seed=42
-)
-
-# 2. Instantiate generator
-generator = MazeGenerator(maze_config)
-
-# 3. Generate the maze
-maze_data = generator.get_maze()
-
-# 4. Access the maze structure (grid of cells)
-for row in maze_data.grid:
-    hex_row = "".join(cell.hex_value for cell in row)
-    print(hex_row)
-
-# 5. Solve the maze
-solution_path = solve_shortest_path(
-    maze_data.grid, 
-    maze_data.entry, 
-    maze_data.exit
-)
-solution_directions = coords_to_directions(solution_path)
-print(f"Solution: {solution_directions}")
-
-# 6. Save maze and solution to file
-MazeGenerator.save_maze_to_file(maze_data, solution_directions)
-```
-
-## Parameters
-
-### MazeData Configuration
-
-- **width** (int): Maze width in cells
-- **height** (int): Maze height in cells
-- **entry** (tuple[int, int]): Starting position (x, y)
-- **exit** (tuple[int, int]): Goal position (x, y)
-- **output_file** (str): Path to output file
-- **perfect** (bool): If False, adds loops to the maze for multiple solutions
-- **seed** (int, optional): Random seed for reproducible generation (default: 42)
-
-## Accessing the Generated Maze
-
-The `MazeData` object returned by `get_maze()` contains:
-
-- **grid**: 2D list of `Cell` objects representing the maze structure
-- **entry**: Starting coordinates
-- **exit**: Goal coordinates
-- **width** / **height**: Dimensions of the maze
-
-Each `Cell` has:
-
-- **x, y**: Cell coordinates
-- **walls**: Bitmask of wall states (NORTH=1, EAST=2, SOUTH=4, WEST=8)
-- **hex_value**: Walls as a single hex digit (0-F)
-- **is_closed(wall)**: Check if a specific wall is closed
-
-## Accessing the Solution
-
-Use the `solve_shortest_path()` function to find the shortest path:
-
-```python
+from maze_gen import MazeData, MazeGenerator
 from maze_gen import solve_shortest_path, coords_to_directions
 
-# Get solution as coordinate list
-path = solve_shortest_path(maze_data.grid, maze_data.entry, maze_data.exit)
+# 1) Configure generation parameters
+params = MazeData(
+    width=20,
+    height=12,
+    entry=(0, 0),
+    exit=(19, 11),
+    output_file="maze.txt",
+    perfect=True,
+    seed=123,
+    algorithm="PRIM",  # "DFS" or "PRIM"
+)
 
-# Convert to direction string (N/E/S/W)
+# 2) Instantiate and generate
+generator = MazeGenerator(params)
+maze = generator.get_maze()
+
+# 3) Access generated maze structure
+grid = maze.grid
+
+# 4) Access one solution
+path = solve_shortest_path(grid, maze.entry, maze.exit)
 directions = coords_to_directions(path)
+
+# 5) Optional: save maze + solution in output-file format
+MazeGenerator.save_maze_to_file(maze, directions)
 ```
 
-## Advanced: Custom Generation with Callbacks
+## Supported Parameters (MazeData)
 
-Monitor maze generation progress with callbacks:
+- `width` (int): Maze width in cells.
+- `height` (int): Maze height in cells.
+- `entry` (tuple[int, int]): Entry coordinate `(x, y)`.
+- `exit` (tuple[int, int]): Exit coordinate `(x, y)`.
+- `output_file` (str): Output file path used by `save_maze_to_file`.
+- `perfect` (bool): `False` opens extra walls (loops), `True` keeps perfect maze behavior.
+- `seed` (int, optional): Random seed for reproducibility.
+- `algorithm` (str, optional): `"DFS"` or `"PRIM"`.
+
+## Accessing Structure and Solution
+
+Generated structure is returned as `MazeData`:
+
+- `maze.grid`: 2D list of `Cell`
+- `maze.entry` / `maze.exit`
+- `maze.width` / `maze.height`
+
+Each `Cell` exposes:
+
+- `x`, `y`
+- `walls` bitmask (`NORTH=1`, `EAST=2`, `SOUTH=4`, `WEST=8`)
+- `hex_value`
+- `is_closed(wall)`
+
+Solution helpers:
+
+- `solve_shortest_path(grid, start, goal)` returns list of coordinates.
+- `coords_to_directions(path)` converts to `N/E/S/W` text.
+
+## Algorithm Notes
+
+- `DFS`: backtracking behavior with long corridors.
+- `PRIM`: randomized Prim behavior with more local branching.
+
+## Callback Support
+
+`get_maze(on_step=...)` accepts a callback called during generation.
 
 ```python
-def on_generation_step(maze_data):
-    # Called after each generation step
-    print(f"Generated {sum(1 for row in maze_data.grid for cell in row if cell.visited)} cells")
+def on_step(maze_data):
+    pass
 
-maze_data = generator.get_maze(on_step=on_generation_step)
+maze = generator.get_maze(on_step=on_step)
 ```
-
-## API Reference
-
-### MazeGenerator
-
-Main class for generating mazes.
-
-```python
-generator = MazeGenerator(data: MazeData)
-```
-
-**Methods:**
-- `get_maze(on_step: Callable | None = None) -> MazeData` - Generate and return maze data
-- `save_maze_to_file(data: MazeData, solution_str: str) -> None` - Save maze to file with solution
-
-### Solver Functions
-
-- `solve_shortest_path(grid: list[list[Cell]], start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]` - Find shortest path using BFS
-- `coords_to_directions(path: list[tuple[int, int]]) -> str` - Convert path to N/E/S/W string
 
 ## License
 

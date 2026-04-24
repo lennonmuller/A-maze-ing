@@ -1,6 +1,15 @@
 """Generate maze grids from ``MazeData`` settings."""
 
 from collections.abc import Callable
+from maze_gen.constants import (
+    ALGO_PRIM,
+    CELL_ALL_WALLS_MASK,
+    DEFAULT_IMPERFECT_OPEN_CHANCE,
+    PATTERN_42,
+    PATTERN_42_HEIGHT,
+    PATTERN_42_MIN_MARGIN,
+    PATTERN_42_WIDTH,
+)
 from maze_gen.models import Cell, Wall, MazeData
 import random
 
@@ -25,17 +34,6 @@ class MazeGenerator:
     DELTA_BY_DIRECTION = {
         value: key for key, value in DIRECTIONS.items()
     }
-
-    PATTERN_42 = [
-        [1, 0, 1, 0, 1, 1, 1],
-        [1, 0, 1, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1, 1, 1],
-        [0, 0, 1, 0, 1, 0, 0],
-        [0, 0, 1, 0, 1, 1, 1],
-    ]
-
-    P_WIDTH = 7
-    P_HEIGHT = 5
 
     def __init__(self, data: MazeData) -> None:
         """Initialize generator state.
@@ -70,8 +68,8 @@ class MazeGenerator:
 
         The pattern is inserted only when maze size is large enough.
         """
-        min_width = self.P_WIDTH + 4
-        min_height = self.P_HEIGHT + 4
+        min_width = PATTERN_42_WIDTH + PATTERN_42_MIN_MARGIN
+        min_height = PATTERN_42_HEIGHT + PATTERN_42_MIN_MARGIN
 
         if (
             self.data.width < min_width or
@@ -86,21 +84,21 @@ class MazeGenerator:
 
         self.data.pattern_warning = ""
 
-        start_x = self._center_start(self.data.width, self.P_WIDTH)
-        start_y = self._center_start(self.data.height, self.P_HEIGHT)
+        start_x = self._center_start(self.data.width, PATTERN_42_WIDTH)
+        start_y = self._center_start(self.data.height, PATTERN_42_HEIGHT)
 
         self.pattern_cells.clear()
 
-        for py in range(self.P_HEIGHT):
-            for px in range(self.P_WIDTH):
-                if self.PATTERN_42[py][px] == 1:
+        for py in range(PATTERN_42_HEIGHT):
+            for px in range(PATTERN_42_WIDTH):
+                if PATTERN_42[py][px] == 1:
                     target_x = start_x + px
                     target_y = start_y + py
 
                     cell = self.data.grid[target_y][target_x]
                     self.pattern_cells.add((target_x, target_y))
 
-                    cell.walls = 15
+                    cell.walls = CELL_ALL_WALLS_MASK
 
                     cell.visited = True
 
@@ -161,7 +159,7 @@ class MazeGenerator:
 
     def _imperfect_maze(
         self,
-        chance: float = 0.05,
+        chance: float = DEFAULT_IMPERFECT_OPEN_CHANCE,
         on_step: Callable[[MazeData], None] | None = None,
     ) -> None:
         """Open random extra walls to create loops.
@@ -174,7 +172,7 @@ class MazeGenerator:
             for x in range(1, self.data.width - 1):
                 cell = self.data.grid[y][x]
 
-                if cell.walls == 15:
+                if cell.walls == CELL_ALL_WALLS_MASK:
                     continue
 
                 if random.random() < chance:
@@ -220,7 +218,7 @@ class MazeGenerator:
         if on_step is not None:
             on_step(self.data)
 
-        if self.data.algorithm == "PRIM":
+        if self.data.algorithm == ALGO_PRIM:
             self._run_prim(on_step)
         else:
             self._run_dfs(on_step)

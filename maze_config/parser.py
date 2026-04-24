@@ -2,6 +2,7 @@
 
 import os
 
+from maze_gen.constants import DEFAULT_ALGORITHM, SUPPORTED_ALGORITHMS
 from maze_gen.models import MazeData
 from maze_config.validator import validate_maze_data, validate_required_keys
 
@@ -50,6 +51,10 @@ def parse_config_file(file_path: str) -> MazeData:
         output_file=config["OUTPUT_FILE"],
         perfect=_parse_bool(config["PERFECT"], "PERFECT"),
         seed=_parse_int(config.get("SEED", "42"), "SEED"),
+        algorithm=_parse_algorithm(
+            config.get("ALGORITHM", DEFAULT_ALGORITHM),
+            "ALGORITHM",
+        ),
     )
 
     validate_maze_data(maze_data)
@@ -117,3 +122,23 @@ def _parse_bool(raw: str, label: str) -> bool:
     if value == "false":
         return False
     raise ValueError(f"{label} must be True or False")
+
+
+def _parse_algorithm(raw: str, label: str) -> str:
+    """Normalize and validate one algorithm name.
+
+    Args:
+        raw: Algorithm text value.
+        label: Field name used in error messages.
+
+    Returns:
+        str: Normalized algorithm name.
+
+    Raises:
+        ValueError: If algorithm is not supported.
+    """
+    value = raw.strip().upper()
+    if value in SUPPORTED_ALGORITHMS:
+        return value
+    supported = ", ".join(SUPPORTED_ALGORITHMS)
+    raise ValueError(f"{label} must be one of: {supported}")

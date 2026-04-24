@@ -1,6 +1,7 @@
 """Validate parsed maze configuration data."""
 
 from maze_gen.models import MazeData
+from maze_gen.constants import SUPPORTED_ALGORITHMS
 from maze_config.constants import (
     MAX_MAZE_AREA,
     MAX_MAZE_HEIGHT,
@@ -59,6 +60,13 @@ def validate_maze_data(data: MazeData) -> None:
         raise ValueError(
             f"Maze area is too large for terminal UI "
             f"(max {MAX_MAZE_AREA} cells)"
+        )
+
+    if data.algorithm not in SUPPORTED_ALGORITHMS:
+        supported = ", ".join(SUPPORTED_ALGORITHMS)
+        raise ValueError(
+            f"Unsupported algorithm '{data.algorithm}'. "
+            f"Use one of: {supported}"
         )
 
     if not _in_bounds(data.entry, data.width, data.height):
