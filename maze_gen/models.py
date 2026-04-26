@@ -44,6 +44,9 @@ class Cell:
         """
         return bool(self.walls & wall)
 
+    def count_walls(self) -> int:
+        return self.walls.bit_count()
+
     @property
     def hex_value(self) -> str:
         """Return wall bitmask as one uppercase hex digit.

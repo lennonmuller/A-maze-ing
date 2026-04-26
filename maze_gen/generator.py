@@ -201,6 +201,12 @@ class MazeGenerator:
 
                     neighbor = self.data.grid[ny][nx]
                     if cell.is_closed(direction):
+                        if cell.count_walls() == 1:
+                            continue
+
+                        if neighbor.count_walls() == 1:
+                            continue
+
                         self._remove_walls(cell, neighbor, direction)
                         if on_step is not None:
                             on_step(self.data)
