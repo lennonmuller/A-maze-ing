@@ -251,6 +251,7 @@ directions = coords_to_directions(path)
 
 - Add an optional solver visualization mode that shows explored paths before highlighting the final shortest path.
 - Add a side-by-side comparison mode (DFS vs PRIM) using the same dimensions and seed.
+- Display a message showing the seed number for each new maze.
 
 ### Tools Used
 
